@@ -15,9 +15,9 @@ export default function Cover({ coverUrl, size = 100 }: { coverUrl: string; size
     <Image
       source={{ uri: imageUrl }}
       accessibilityLabel="Cover"
-      style={{ width: size, height: size, borderRadius: size / 2 }}
+      style={{ width: size, height: size, borderRadius: 10 }}
     />
   ) : (
-    <View style={{ width: size, height: size, backgroundColor: 'gray', borderRadius: size / 2 }} />
+    <View style={{ width: size, height: size, backgroundColor: 'gray', borderRadius: 10 }} />
   );
 }

@@ -22,38 +22,34 @@ type MessageState = {
 export const useMessageStore = create<MessageState>((set, get) => ({
   messages: [],
   getMessages: async (chatId: string, olderThanId?: string) => {
-    try {
-      let query = supabase
+    let query = supabase
+      .from('messages')
+      .select('*')
+      .eq('chat_id', chatId)
+      .order('sent_at', { ascending: false })
+      .limit(20);
+
+    if (olderThanId) {
+      const { data: olderMessage } = await supabase
         .from('messages')
-        .select('*')
-        .eq('chat_id', chatId)
-        .order('sent_at', { ascending: false })
-        .limit(20);
+        .select('sent_at')
+        .eq('id', olderThanId)
+        .single();
 
-      if (olderThanId) {
-        const { data: olderMessage } = await supabase
-          .from('messages')
-          .select('sent_at')
-          .eq('id', olderThanId)
-          .single();
+      if (olderMessage) query = query.lt('sent_at', olderMessage.sent_at);
+    }
 
-        if (olderMessage) {
-          query = query.lt('sent_at', olderMessage.sent_at);
-        }
-      }
+    const { data, error } = await query;
 
-      const { data, error } = await query;
+    if (error) throw error;
+    if (!data) throw new Error('No messages found');
 
-      if (error) throw error;
-      if (!data) throw new Error('No messages found');
-
+    if (data.length > 0) {
       const reversedData = [...data].reverse();
 
       set((state) => ({
         messages: olderThanId ? [...reversedData, ...state.messages] : reversedData,
       }));
-    } catch (error) {
-      console.error('Failed to fetch messages:', error);
     }
   },
   subscribeToMessages: (chatId: string) => {

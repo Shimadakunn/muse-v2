@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
 import ChatIconFilled from '~/assets/svg/chat-filled.svg';
@@ -15,6 +15,11 @@ import { useUserStore } from '~/store/useUser';
 export default function TabsLayout() {
   const { user } = useUserStore();
   const [avatarUrl, setAvatarUrl] = useState<string>(user?.avatar_url ?? '');
+
+  useEffect(() => {
+    if (user) setAvatarUrl(user.avatar_url);
+  }, [user]);
+
   return (
     <Tabs
       screenOptions={{
@@ -60,7 +65,7 @@ export default function TabsLayout() {
             title: 'Profile',
             tabBarIcon: ({ focused }) =>
               focused ? (
-                <View className="border-foreground rounded-full border-2">
+                <View className="rounded-full border-2 border-foreground">
                   <Avatar avatarUrl={avatarUrl} size={28} />
                 </View>
               ) : (

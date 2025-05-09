@@ -6,7 +6,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { supabase } from '~/utils/supabase';
 
-type User = {
+export type User = {
   id: string;
   username: string;
   avatar_url: string;
@@ -18,6 +18,7 @@ type UserState = {
   updateUser: (session: Session | null, username: string, avatar_url: string) => Promise<void>;
   uploadAvatar: (session: Session | null, result: ImagePicker.ImagePickerResult) => Promise<void>;
   resetUser: () => void;
+  getAnyUser: (userId: string) => Promise<User | null>;
 };
 
 export const useUserStore = create<UserState>()(
@@ -65,6 +66,15 @@ export const useUserStore = create<UserState>()(
         if (uploadError) throw uploadError;
         const user = useUserStore.getState().user;
         await useUserStore.getState().updateUser(session, user!.username, data.path);
+      },
+      getAnyUser: async (userId: string) => {
+        const { data, error, status } = await supabase
+          .from('users')
+          .select(`username, avatar_url, id`)
+          .eq('id', userId)
+          .single();
+        if (error && status !== 406) throw error;
+        return data;
       },
       resetUser: () => {
         set({ user: null });
