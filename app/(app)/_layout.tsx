@@ -18,6 +18,7 @@ export default function ProtectedLayout() {
         contentStyle: { backgroundColor: '#121212' },
       }}>
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="audio-modal" options={{ presentation: 'modal' }} />
       <Stack.Screen name="messages" />
     </Stack>
   );

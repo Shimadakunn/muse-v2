@@ -25,20 +25,16 @@ export type SwipedAudio = {
 
 type SwipeState = {
   audios: Audio[];
-  currentAudio: Audio | null;
-  recentlySwipedAudios: SwipedAudio[];
   getAudios: () => Promise<void>;
-  swipeRight: (audio: Audio) => Promise<void>;
   swipeUp: (audio: Audio) => Promise<void>;
-  cancelLastSwipe: () => Promise<void>;
+  swipeDown: (audio: Audio) => Promise<void>;
+  saveToLibrary: (audio: Audio) => Promise<void>;
 };
 
 export const useSwipeStore = create<SwipeState>()(
   persist(
     (set, get) => ({
       audios: [],
-      currentAudio: null,
-      recentlySwipedAudios: [],
       getAudios: async (addMore = false) => {
         const { user } = useUserStore.getState();
         if (!user) throw new Error('User not found');
@@ -85,7 +81,41 @@ export const useSwipeStore = create<SwipeState>()(
           audios: addMore ? [...state.audios, ...audiosWithUsers] : audiosWithUsers,
         }));
       },
-      swipeRight: async (audio: Audio) => {
+      swipeUp: async (audio: Audio) => {
+        const { user } = useUserStore.getState();
+        if (!user) throw new Error('User not found');
+
+        console.log('swipeUp audio', audio.title);
+
+        const { data, error } = await supabase.from('swipes').insert({
+          swiper_id: user.id,
+          audio_id: audio.id,
+          liked: false,
+        });
+
+        if (error) throw error;
+
+        useLibraryStore.getState().getLibrary();
+      },
+      swipeDown: async (audio: Audio) => {
+        const { user } = useUserStore.getState();
+        if (!user) throw new Error('User not found');
+
+        console.log('swipeDown audio', audio);
+        const { data, error } = await supabase
+          .from('swipes')
+          .delete()
+          .eq('swiper_id', user.id)
+          .eq('audio_id', audio.id);
+
+        console.log('swipeDown data', data);
+        console.log('swipeDown error', error);
+
+        if (error) throw error;
+
+        useLibraryStore.getState().getLibrary();
+      },
+      saveToLibrary: async (audio: Audio) => {
         const { user } = useUserStore.getState();
         if (!user) throw new Error('User not found');
 
@@ -98,77 +128,6 @@ export const useSwipeStore = create<SwipeState>()(
         if (error) throw error;
 
         useLibraryStore.getState().getLibrary();
-
-        set((state) => {
-          // Add to recently swiped audios
-          const newRecentlySwipedAudios = [
-            { audio, liked: true, swipedAt: Date.now() },
-            ...state.recentlySwipedAudios,
-          ].slice(0, 3); // Keep only last 3 swipes
-
-          return {
-            audios: state.audios.filter((a) => a.id !== audio.id),
-            currentAudio: state.audios.length > 1 ? state.audios[1] : null,
-            recentlySwipedAudios: newRecentlySwipedAudios,
-          };
-        });
-      },
-      swipeUp: async (audio: Audio) => {
-        const { user } = useUserStore.getState();
-        if (!user) throw new Error('User not found');
-
-        const { data, error } = await supabase.from('swipes').insert({
-          swiper_id: user.id,
-          audio_id: audio.id,
-          liked: false,
-        });
-
-        if (error) throw error;
-
-        set((state) => {
-          // Add to recently swiped audios
-          const newRecentlySwipedAudios = [
-            { audio, liked: false, swipedAt: Date.now() },
-            ...state.recentlySwipedAudios,
-          ].slice(0, 3);
-
-          return {
-            audios: state.audios.filter((a) => a.id !== audio.id),
-            currentAudio: state.audios.length > 1 ? state.audios[1] : null,
-            recentlySwipedAudios: newRecentlySwipedAudios,
-          };
-        });
-      },
-      cancelLastSwipe: async () => {
-        const state = get();
-        const { user } = useUserStore.getState();
-
-        if (!user) throw new Error('User not found');
-        if (state.recentlySwipedAudios.length === 0) return;
-
-        const lastSwipe = state.recentlySwipedAudios[0];
-
-        // Delete the swipe from the database
-        const { error } = await supabase.from('swipes').delete().match({
-          swiper_id: user.id,
-          audio_id: lastSwipe.audio.id,
-        });
-
-        if (error) throw error;
-
-        // If it was a liked audio, refresh the library to remove it
-        if (lastSwipe.liked) {
-          useLibraryStore.getState().getLibrary();
-        }
-
-        set((state) => ({
-          // Add the audio back to the queue
-          audios: [lastSwipe.audio, ...state.audios],
-          // Update the current audio to be the recovered one
-          currentAudio: lastSwipe.audio,
-          // Remove the swiped audio from the history
-          recentlySwipedAudios: state.recentlySwipedAudios.slice(1),
-        }));
       },
     }),
     {

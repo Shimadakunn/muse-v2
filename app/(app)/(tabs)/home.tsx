@@ -1,29 +1,48 @@
-import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Dimensions, FlatList, NativeScrollEvent, NativeSyntheticEvent, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import AudioCard from '~/components/AudioCard';
 import { Text } from '~/components/ui/text';
-import { useSwipeStore } from '~/store/useSwipe';
+import { Audio, useSwipeStore } from '~/store/useSwipe';
 
 export default function Home() {
-  const { audios, getAudios, swipeRight, swipeUp } = useSwipeStore();
+  const { audios, swipeUp, swipeDown } = useSwipeStore();
+  const flatListRef = useRef<FlatList<Audio>>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [previousIndex, setPreviousIndex] = useState(0);
 
+  const ITEM_HEIGHT = Dimensions.get('window').height * 0.75 + 16;
+
+  // Track index changes to detect direction of navigation
   useEffect(() => {
-    getAudios();
-  }, []);
+    if (currentIndex !== previousIndex) {
+      if (currentIndex < previousIndex) {
+        console.log('Scrolled down to previous item, triggering cancelLastSwipe');
+        swipeDown(audios[currentIndex]);
+      } else if (currentIndex > previousIndex) {
+        console.log('Scrolled up to next item, triggering swipeUp', audios[previousIndex]?.title);
+        swipeUp(audios[previousIndex]);
+      }
 
-  // if (audios.length === 0) {
-  //   return (
-  //     <View style={styles.container}>
-  //       <ActivityIndicator size="large" color="#fff" />
-  //     </View>
-  //   );
-  // }
+      setPreviousIndex(currentIndex);
+    }
+  }, [currentIndex]);
+
+  const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const newIndex = Math.round(offsetY / ITEM_HEIGHT);
+
+    console.log('Scroll ended at index:', newIndex, 'Previous index:', currentIndex);
+
+    if (newIndex !== currentIndex) {
+      setCurrentIndex(newIndex);
+    }
+  };
 
   if (audios.length === 0) {
     return (
-      <View style={styles.container}>
+      <View className="flex-1 items-center justify-center">
         <Text className="text-center text-xl">No more audios available</Text>
         <Text className="mt-2 text-center text-sm text-gray-400">
           Check back later for new tunes!
@@ -33,40 +52,23 @@ export default function Home() {
   }
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <View style={styles.cardsContainer}>
-        {audios.map((audio, index) => (
-          <View
-            key={`audio-${audio.id}-${index}`}
-            style={[styles.cardWrapper, { zIndex: audios.length - index }]}>
-            <AudioCard
-              audio={audio}
-              onSwipeLeft={(audio) => swipeUp(audio)}
-              onSwipeRight={(audio) => swipeRight(audio)}
-            />
+    <GestureHandlerRootView className="flex-1 bg-background">
+      <FlatList
+        ref={flatListRef}
+        data={audios}
+        keyExtractor={(item, index) => `audio-${item.id}-${index}`}
+        renderItem={({ item: audio }) => (
+          <View className="m-2">
+            <AudioCard audio={audio} />
           </View>
-        ))}
-      </View>
+        )}
+        showsVerticalScrollIndicator={false}
+        snapToAlignment="start"
+        pagingEnabled
+        snapToInterval={ITEM_HEIGHT}
+        decelerationRate="fast"
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+      />
     </GestureHandlerRootView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardsContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  cardWrapper: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-  },
-});

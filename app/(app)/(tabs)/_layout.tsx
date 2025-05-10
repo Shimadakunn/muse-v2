@@ -26,8 +26,8 @@ export default function TabsLayout() {
         // header: () => <Header />,
         headerShown: false,
         tabBarActiveTintColor: 'white',
-        tabBarShowLabel: false,
-        tabBarStyle: { backgroundColor: '#121212' },
+        tabBarShowLabel: true,
+        tabBarStyle: { backgroundColor: '#121212', height: 60 },
       }}>
       <Tabs.Screen
         name="home"

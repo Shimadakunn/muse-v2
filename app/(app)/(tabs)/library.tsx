@@ -2,9 +2,9 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-import AudioModal from '~/components/AudioModal';
 import Cover from '~/components/ui/cover';
 import { Text } from '~/components/ui/text';
+import AudioModal from '~/pages/library/AudioModal';
 import { useLibraryStore } from '~/store/useLibrary';
 import { Audio } from '~/store/useSwipe';
 
