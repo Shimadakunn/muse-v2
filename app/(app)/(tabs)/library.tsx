@@ -1,15 +1,18 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { FlatList, Modal, TouchableOpacity, View } from 'react-native';
 
+import AudioCard from '~/components/AudioCard';
 import Cover from '~/components/ui/cover';
 import { Text } from '~/components/ui/text';
-import AudioModal from '~/pages/library/AudioModal';
+import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { useLibraryStore } from '~/store/useLibrary';
 import { Audio } from '~/store/useSwipe';
 
 export default function Library() {
   const { library, getLibrary } = useLibraryStore();
+  const { playAudio } = useAudioPlayer();
   const [selectedAudio, setSelectedAudio] = useState<Audio | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -31,8 +34,8 @@ export default function Library() {
 
   if (!library || library.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text className="text-center text-xl">Your library is empty</Text>
+      <View className="flex-1 items-center justify-center bg-background">
+        <Text className="text-center text-xl text-foreground">Your library is empty</Text>
         <Text className="mt-2 text-center text-sm text-gray-400">
           Swipe right on songs you like to add them here
         </Text>
@@ -41,20 +44,20 @@ export default function Library() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Your Library</Text>
+    <View className="flex-1 bg-background">
+      <Text className="text-center text-xl text-foreground">Your Library</Text>
 
       <FlatList
         data={library}
         numColumns={2}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.audioItem} onPress={() => openAudioModal(item)}>
-            <Cover coverUrl={item.cover_url} size={150} />
-            <Text style={styles.audioTitle}>{item.title}</Text>
+          <TouchableOpacity className="m-2" onPress={() => playAudio(item)}>
+            <Cover coverUrl={item.cover_url} className="aspect-square w-[125px] rounded-2xl" />
+            <Text className="mt-2 text-center text-sm text-foreground">{item.title}</Text>
           </TouchableOpacity>
         )}
-        contentContainerStyle={styles.gridContainer}
+        contentContainerStyle={{ padding: 16 }}
       />
 
       <AudioModal audio={selectedAudio} visible={modalVisible} onClose={closeModal} />
@@ -62,43 +65,23 @@ export default function Library() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-    padding: 16,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000',
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 20,
-  },
-  gridContainer: {
-    paddingBottom: 20,
-  },
-  audioItem: {
-    flex: 1,
-    margin: 8,
-    alignItems: 'center',
-  },
-  audioTitle: {
-    color: 'white',
-    marginTop: 8,
-    textAlign: 'center',
-    fontSize: 14,
-  },
-});
+const AudioModal = ({
+  audio,
+  visible,
+  onClose,
+}: {
+  audio: Audio | null;
+  visible: boolean;
+  onClose: () => void;
+}) => {
+  return (
+    <Modal visible={visible} onRequestClose={onClose} animationType="slide" transparent>
+      <View className="flex-1 items-center justify-center bg-background p-4">
+        <TouchableOpacity onPress={onClose} className="absolute right-4 top-12">
+          <Ionicons name="close" size={24} color="white" />
+        </TouchableOpacity>
+        {audio && <AudioCard audio={audio} />}
+      </View>
+    </Modal>
+  );
+};

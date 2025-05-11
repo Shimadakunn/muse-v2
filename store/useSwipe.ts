@@ -26,7 +26,7 @@ export type SwipedAudio = {
 type SwipeState = {
   audios: Audio[];
   getAudios: () => Promise<void>;
-  swipeUp: (audio: Audio) => Promise<void>;
+  swipeUp: (audio: Audio, liked: boolean) => Promise<void>;
   swipeDown: (audio: Audio) => Promise<void>;
   saveToLibrary: (audio: Audio) => Promise<void>;
 };
@@ -81,16 +81,14 @@ export const useSwipeStore = create<SwipeState>()(
           audios: addMore ? [...state.audios, ...audiosWithUsers] : audiosWithUsers,
         }));
       },
-      swipeUp: async (audio: Audio) => {
+      swipeUp: async (audio: Audio, liked: boolean) => {
         const { user } = useUserStore.getState();
         if (!user) throw new Error('User not found');
-
-        console.log('swipeUp audio', audio.title);
 
         const { data, error } = await supabase.from('swipes').insert({
           swiper_id: user.id,
           audio_id: audio.id,
-          liked: false,
+          liked,
         });
 
         if (error) throw error;

@@ -32,11 +32,9 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => ({
   playAudio: async (audio: AudioType) => {
     const { sound: currentSound, currentAudio } = get();
 
-    // Stop current audio if different from the one we want to play
     if (currentSound && currentAudio?.id !== audio.id) {
       await currentSound.unloadAsync();
     } else if (currentAudio?.id === audio.id && currentSound) {
-      // If it's the same audio, just resume
       await get().resumeAudio();
       return;
     }
@@ -64,7 +62,6 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => ({
           if (status.isLoaded) {
             set({
               position: status.positionMillis,
-              isPlaying: status.isPlaying,
             });
           }
         }
@@ -75,7 +72,6 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => ({
         if (status.isLoaded) {
           set({
             position: status.positionMillis,
-            isPlaying: status.isPlaying,
             duration: status.durationMillis || 0,
           });
         }

@@ -58,10 +58,8 @@ export const useLibraryStore = create<LibraryState>()(
 
         if (audioError) throw audioError;
 
-        // Create a map of audio_id to swiped_at
         const swipeOrder = new Map(swipes.map((swipe) => [swipe.audio_id, swipe.swiped_at]));
 
-        // Fetch user information for each audio
         const audiosWithUsers = await Promise.all(
           audioData.map(async (audio) => {
             try {
@@ -77,11 +75,10 @@ export const useLibraryStore = create<LibraryState>()(
           })
         );
 
-        // Sort the audio data based on the swiped_at timestamp
         const sortedAudioData = audiosWithUsers.sort((a, b) => {
           const aTime = swipeOrder.get(a.id) || 0;
           const bTime = swipeOrder.get(b.id) || 0;
-          return bTime - aTime; // Descending order (newest first)
+          return bTime - aTime;
         });
         set((state) => ({
           library: olderThanId ? [...sortedAudioData, ...state.library] : sortedAudioData,

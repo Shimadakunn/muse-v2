@@ -4,39 +4,53 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import AudioCard from '~/components/AudioCard';
 import { Text } from '~/components/ui/text';
+import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { Audio, useSwipeStore } from '~/store/useSwipe';
 
 export default function Home() {
   const { audios, swipeUp, swipeDown } = useSwipeStore();
+  const { playAudio } = useAudioPlayer();
   const flatListRef = useRef<FlatList<Audio>>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [previousIndex, setPreviousIndex] = useState(0);
+  const [isLikeScroll, setIsLikeScroll] = useState(false);
 
   const ITEM_HEIGHT = Dimensions.get('window').height * 0.75 + 16;
 
-  // Track index changes to detect direction of navigation
   useEffect(() => {
     if (currentIndex !== previousIndex) {
-      if (currentIndex < previousIndex) {
-        console.log('Scrolled down to previous item, triggering cancelLastSwipe');
-        swipeDown(audios[currentIndex]);
-      } else if (currentIndex > previousIndex) {
-        console.log('Scrolled up to next item, triggering swipeUp', audios[previousIndex]?.title);
-        swipeUp(audios[previousIndex]);
-      }
+      if (currentIndex < previousIndex) swipeDown(audios[currentIndex]);
+      else if (currentIndex > previousIndex && !isLikeScroll) swipeUp(audios[previousIndex], false);
+
+      if (audios[currentIndex]) playAudio(audios[currentIndex]);
 
       setPreviousIndex(currentIndex);
+
+      if (isLikeScroll) setIsLikeScroll(false);
     }
-  }, [currentIndex]);
+  }, [currentIndex, isLikeScroll]);
+
+  // Play the initial audio when component mounts
+  useEffect(() => {
+    if (audios.length > 0 && currentIndex === 0) playAudio(audios[0]);
+  }, []);
 
   const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetY = event.nativeEvent.contentOffset.y;
     const newIndex = Math.round(offsetY / ITEM_HEIGHT);
 
-    console.log('Scroll ended at index:', newIndex, 'Previous index:', currentIndex);
+    if (newIndex !== currentIndex) setCurrentIndex(newIndex);
+  };
 
-    if (newIndex !== currentIndex) {
-      setCurrentIndex(newIndex);
+  const scrollToNextItem = () => {
+    const nextIndex = currentIndex + 1;
+    if (nextIndex < audios.length) {
+      swipeUp(audios[currentIndex], true);
+      setIsLikeScroll(true);
+      flatListRef.current?.scrollToOffset({
+        offset: nextIndex * ITEM_HEIGHT,
+        animated: true,
+      });
     }
   };
 
@@ -59,7 +73,7 @@ export default function Home() {
         keyExtractor={(item, index) => `audio-${item.id}-${index}`}
         renderItem={({ item: audio }) => (
           <View className="m-2">
-            <AudioCard audio={audio} />
+            <AudioCard audio={audio} onLike={scrollToNextItem} />
           </View>
         )}
         showsVerticalScrollIndicator={false}

@@ -3,7 +3,7 @@ import { Image, View } from 'react-native';
 
 import { downloadCover } from '~/utils/downloadCover';
 
-export default function Cover({ coverUrl, size = 100 }: { coverUrl: string; size?: number }) {
+export default function Cover({ coverUrl, className }: { coverUrl: string; className?: string }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -12,12 +12,8 @@ export default function Cover({ coverUrl, size = 100 }: { coverUrl: string; size
   }, [coverUrl]);
 
   return imageUrl ? (
-    <Image
-      source={{ uri: imageUrl }}
-      accessibilityLabel="Cover"
-      style={{ width: size, height: size, borderRadius: 10 }}
-    />
+    <Image source={{ uri: imageUrl }} accessibilityLabel="Cover" className={className} />
   ) : (
-    <View style={{ width: size, height: size, backgroundColor: 'gray', borderRadius: 10 }} />
+    <View className={className} />
   );
 }
