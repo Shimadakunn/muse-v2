@@ -1,13 +1,14 @@
-import { Pause, Play } from 'lucide-react-native';
+import { Heart, Pause, Play } from 'lucide-react-native';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 import { useAudioPlayer } from '~/store/useAudioPlayer';
-import { formatAudioTime } from '~/utils/formatAudioTime';
+import { useSwipeStore } from '~/store/useSwipe';
 
 const MusicPlayer = () => {
   const { currentAudio, isPlaying, isLoading, duration, position, pauseAudio, resumeAudio } =
     useAudioPlayer();
+  const { like } = useSwipeStore();
 
   if (!currentAudio) return null;
 
@@ -65,11 +66,9 @@ const MusicPlayer = () => {
         </View>
       </View>
 
-      <View className="flex-row items-center">
-        <Text className="mr-2 text-xs text-gray-400">
-          {formatAudioTime(position)} / {formatAudioTime(duration)}
-        </Text>
-      </View>
+      <TouchableOpacity onPress={() => like(currentAudio)}>
+        <Heart size={20} color="white" fill={currentAudio.liked ? 'red' : 'none'} />
+      </TouchableOpacity>
     </View>
   );
 };

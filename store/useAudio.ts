@@ -8,17 +8,7 @@ import { useUserStore } from './useUser';
 
 import { supabase } from '~/utils/supabase';
 
-type Audio = {
-  id: string;
-  title: string;
-  audio_url: string;
-  cover_url: string;
-  posted_at: string;
-  posted_by: string;
-};
-
 type AudioState = {
-  audio: Audio | null;
   postAudio: (title: string, cover_url: string, audio_url: string) => Promise<void>;
   uploadCover: (
     result: ImagePicker.ImagePickerResult,
@@ -33,11 +23,10 @@ type AudioState = {
 export const useAudioStore = create<AudioState>()(
   persist(
     (set) => ({
-      audio: null,
       postAudio: async (title: string, cover_url: string, audio_url: string) => {
         const { user } = useUserStore.getState();
         if (!user) throw new Error('No user found in postAudio');
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('audios')
           .insert({
             title,
@@ -47,8 +36,6 @@ export const useAudioStore = create<AudioState>()(
           })
           .select('*')
           .single();
-        console.log('postAudio data', data);
-        console.log('postAudio error', error);
         if (error) throw error;
       },
       uploadCover: async (
@@ -67,8 +54,6 @@ export const useAudioStore = create<AudioState>()(
           .upload(path, arraybuffer, {
             contentType: image.mimeType ?? 'image/jpeg',
           });
-        console.log('uploadCover data', data);
-        console.log('uploadCover error', uploadError);
         if (uploadError) throw uploadError;
         setCoverUrl(data.path);
       },
@@ -83,14 +68,11 @@ export const useAudioStore = create<AudioState>()(
         const arraybuffer = await fetch(audio.uri).then((res) => res.arrayBuffer());
         const fileExt = audio.uri?.split('.').pop()?.toLowerCase() ?? 'mp3';
         const path = `${Date.now()}.${fileExt}`;
-        console.log('uploadAudio path', path);
         const { data, error: uploadError } = await supabase.storage
           .from('audios')
           .upload(path, arraybuffer, {
             contentType: audio.mimeType ?? 'audio/mpeg',
           });
-        console.log('uploadAudio data', data);
-        console.log('uploadAudio error', uploadError);
         if (uploadError) throw uploadError;
         setAudioUrl(data.path);
       },

@@ -10,7 +10,6 @@ import { supabase } from '~/utils/supabase';
 type LibraryState = {
   library: Audio[];
   getLibrary: (olderThanId?: string) => Promise<void>;
-  removeAudio: (audio: Audio) => Promise<void>;
 };
 
 export const useLibraryStore = create<LibraryState>()(
@@ -62,16 +61,12 @@ export const useLibraryStore = create<LibraryState>()(
 
         const audiosWithUsers = await Promise.all(
           audioData.map(async (audio) => {
-            try {
-              const userData = await useUserStore.getState().getAnyUser(audio.posted_by);
-              return {
-                ...audio,
-                posted_by_user: userData,
-              };
-            } catch (error) {
-              console.error('Error fetching user for audio:', error);
-              return audio;
-            }
+            const userData = await useUserStore.getState().getAnyUser(audio.posted_by);
+            return {
+              ...audio,
+              posted_by_user: userData,
+              liked: true,
+            };
           })
         );
 
@@ -83,24 +78,6 @@ export const useLibraryStore = create<LibraryState>()(
         set((state) => ({
           library: olderThanId ? [...sortedAudioData, ...state.library] : sortedAudioData,
         }));
-      },
-      removeAudio: async (audio: Audio) => {
-        try {
-          const { user } = useUserStore.getState();
-          if (!user) throw new Error('User not found');
-
-          const { error } = await supabase
-            .from('swipes')
-            .update({ liked: false })
-            .eq('swiper_id', user.id)
-            .eq('audio_id', audio.id);
-
-          if (error) throw error;
-
-          await useLibraryStore.getState().getLibrary();
-        } catch (error) {
-          console.error('Error removing audio from library:', error);
-        }
       },
     }),
     {

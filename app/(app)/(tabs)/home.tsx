@@ -8,7 +8,7 @@ import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { Audio, useSwipeStore } from '~/store/useSwipe';
 
 export default function Home() {
-  const { audios, swipeUp, swipeDown } = useSwipeStore();
+  const { audios, swipeUp, getAudios } = useSwipeStore();
   const { playAudio } = useAudioPlayer();
   const flatListRef = useRef<FlatList<Audio>>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -19,8 +19,8 @@ export default function Home() {
 
   useEffect(() => {
     if (currentIndex !== previousIndex) {
-      if (currentIndex < previousIndex) swipeDown(audios[currentIndex]);
-      else if (currentIndex > previousIndex && !isLikeScroll) swipeUp(audios[previousIndex], false);
+      // if (currentIndex < previousIndex) swipeDown(audios[currentIndex]);
+      if (currentIndex > previousIndex && !isLikeScroll) swipeUp(audios[previousIndex], false);
 
       if (audios[currentIndex]) playAudio(audios[currentIndex]);
 
@@ -32,6 +32,7 @@ export default function Home() {
 
   // Play the initial audio when component mounts
   useEffect(() => {
+    getAudios();
     if (audios.length > 0 && currentIndex === 0) playAudio(audios[0]);
   }, []);
 
@@ -45,7 +46,6 @@ export default function Home() {
   const scrollToNextItem = () => {
     const nextIndex = currentIndex + 1;
     if (nextIndex < audios.length) {
-      swipeUp(audios[currentIndex], true);
       setIsLikeScroll(true);
       flatListRef.current?.scrollToOffset({
         offset: nextIndex * ITEM_HEIGHT,

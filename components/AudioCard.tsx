@@ -1,5 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Pause, Play } from 'lucide-react-native';
+import { Heart, Pause, Play } from 'lucide-react-native';
 import { TouchableOpacity, View } from 'react-native';
 
 import { Avatar } from './ui';
@@ -8,7 +7,7 @@ import Cover from './ui/cover';
 import { Text } from './ui/text';
 
 import { useAudioPlayer } from '~/store/useAudioPlayer';
-import { Audio as AudioType } from '~/store/useSwipe';
+import { Audio as AudioType, useSwipeStore } from '~/store/useSwipe';
 
 interface AudioProps {
   audio: AudioType;
@@ -16,16 +15,9 @@ interface AudioProps {
 }
 
 export default function AudioCard({ audio, onLike }: AudioProps) {
-  const {
-    currentAudio,
-    isPlaying,
-    duration,
-    position,
-    pauseAudio,
-    resumeAudio,
-    seekAudio,
-    playAudio,
-  } = useAudioPlayer();
+  const { isPlaying, duration, position, pauseAudio, resumeAudio, seekAudio, playAudio } =
+    useAudioPlayer();
+  const { like } = useSwipeStore();
 
   const handleSeek = (newPosition: number) => {
     if (seekAudio) {
@@ -56,9 +48,14 @@ export default function AudioCard({ audio, onLike }: AudioProps) {
         </View>
         <TouchableOpacity
           onPress={() => {
+            like(audio);
             if (onLike) onLike();
           }}>
-          <Ionicons name="heart" size={24} color="black" />
+          <Heart
+            size={24}
+            color={audio.liked ? 'red' : 'white'}
+            fill={audio.liked ? 'red' : 'none'}
+          />
         </TouchableOpacity>
       </View>
 
