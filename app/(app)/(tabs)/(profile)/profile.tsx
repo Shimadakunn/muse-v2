@@ -1,5 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
-import { TouchableOpacity, View } from 'react-native';
+import { router } from 'expo-router';
+import { Edit } from 'lucide-react-native';
+import { Pressable, TouchableOpacity, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { Button, Text } from '~/components/ui';
@@ -29,7 +31,10 @@ export default function Profile() {
   };
 
   return (
-    <View className="bg-background flex-1">
+    <View className="flex-1 bg-background">
+      <Pressable onPress={() => router.push('/(app)/(tabs)/(profile)/edit')}>
+        <Edit size={24} color="white" />
+      </Pressable>
       <View className="flex-row items-center gap-4">
         <TouchableOpacity onPress={handleAvatarUpload}>
           <Avatar avatarUrl={user?.avatar_url || ''} size={100} />
@@ -37,6 +42,7 @@ export default function Profile() {
         <Text>{user?.username}</Text>
         <Text>{user?.id}</Text>
       </View>
+
       <Button
         className="mx-auto flex rounded-full bg-red-400 px-12 py-3"
         onPress={() =>

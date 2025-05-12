@@ -70,7 +70,7 @@ export default function TabsLayout() {
         />
         {user?.avatar_url && (
           <Tabs.Screen
-            name="profile"
+            name="(profile)"
             options={{
               title: 'Profile',
               tabBarIcon: ({ focused }) =>

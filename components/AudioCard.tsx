@@ -11,13 +11,33 @@ import { Audio as AudioType, useSwipeStore } from '~/store/useSwipe';
 
 interface AudioProps {
   audio: AudioType;
-  onLike?: () => void;
 }
 
-export default function AudioCard({ audio, onLike }: AudioProps) {
-  const { isPlaying, duration, position, pauseAudio, resumeAudio, seekAudio, playAudio } =
-    useAudioPlayer();
+export default function AudioCard({ audio }: AudioProps) {
+  const {
+    isPlaying,
+    duration,
+    position,
+    pauseAudio,
+    resumeAudio,
+    seekAudio,
+    playAudio,
+    currentAudio,
+  } = useAudioPlayer();
   const { like } = useSwipeStore();
+
+  // Check if this audio is the currently playing one
+  const isCurrentAudio = currentAudio?.id === audio.id;
+
+  const handlePlayPause = () => {
+    if (isCurrentAudio) {
+      // If this is the current audio, just toggle play/pause
+      isPlaying ? pauseAudio() : resumeAudio();
+    } else {
+      // If this is a different audio, play it
+      playAudio(audio);
+    }
+  };
 
   const handleSeek = (newPosition: number) => {
     if (seekAudio) {
@@ -49,7 +69,6 @@ export default function AudioCard({ audio, onLike }: AudioProps) {
         <TouchableOpacity
           onPress={() => {
             like(audio);
-            if (onLike) onLike();
           }}>
           <Heart
             size={24}
@@ -63,20 +82,18 @@ export default function AudioCard({ audio, onLike }: AudioProps) {
       <WaveformSlider
         duration={duration || 0}
         position={position || 0}
-        isPlaying={isPlaying}
+        isPlaying={isPlaying && isCurrentAudio}
         onSeek={handleSeek}
       />
 
       {/* Play/Pause button */}
       <View className="mb-6 mt-2 flex-row items-center justify-center">
-        <TouchableOpacity
-          className="rounded-full bg-accent/50 p-3"
-          onPress={() => {
-            playAudio(audio);
-            if (isPlaying) pauseAudio();
-            else resumeAudio();
-          }}>
-          {isPlaying ? <Pause size={32} color="white" /> : <Play size={32} color="white" />}
+        <TouchableOpacity className="rounded-full bg-accent/50 p-3" onPress={handlePlayPause}>
+          {isPlaying && isCurrentAudio ? (
+            <Pause size={32} color="white" />
+          ) : (
+            <Play size={32} color="white" />
+          )}
         </TouchableOpacity>
       </View>
     </View>

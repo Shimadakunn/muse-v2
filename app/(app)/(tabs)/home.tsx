@@ -43,17 +43,6 @@ export default function Home() {
     if (newIndex !== currentIndex) setCurrentIndex(newIndex);
   };
 
-  const scrollToNextItem = () => {
-    const nextIndex = currentIndex + 1;
-    if (nextIndex < audios.length) {
-      setIsLikeScroll(true);
-      flatListRef.current?.scrollToOffset({
-        offset: nextIndex * ITEM_HEIGHT,
-        animated: true,
-      });
-    }
-  };
-
   if (audios.length === 0) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -73,7 +62,7 @@ export default function Home() {
         keyExtractor={(item, index) => `audio-${item.id}-${index}`}
         renderItem={({ item: audio }) => (
           <View className="m-2">
-            <AudioCard audio={audio} onLike={scrollToNextItem} />
+            <AudioCard audio={audio} />
           </View>
         )}
         showsVerticalScrollIndicator={false}

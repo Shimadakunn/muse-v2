@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { Heart, Pause, Play } from 'lucide-react-native';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
@@ -20,8 +21,18 @@ const MusicPlayer = () => {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - progress);
 
+  const handleOpenModal = () => {
+    router.push({
+      pathname: '/(app)/audio-modal',
+      params: { id: currentAudio.id },
+    });
+  };
+
   return (
-    <View className="mx-2 flex-row items-center rounded-full border border-foreground/50 bg-card p-3">
+    <TouchableOpacity
+      className="mx-2 flex-row items-center rounded-full border border-foreground/50 bg-card p-3"
+      onPress={handleOpenModal}
+      activeOpacity={0.7}>
       <View className="flex-1 flex-row items-center">
         <View className="relative h-10 w-10 items-center justify-center">
           <Svg width={size} height={size} style={{ position: 'absolute' }}>
@@ -50,7 +61,10 @@ const MusicPlayer = () => {
             <ActivityIndicator color="white" size="small" />
           ) : (
             <TouchableOpacity
-              onPress={isPlaying ? pauseAudio : resumeAudio}
+              onPress={(e) => {
+                e.stopPropagation(); // Prevent triggering parent's onPress
+                isPlaying ? pauseAudio() : resumeAudio();
+              }}
               className="h-10 w-10 items-center justify-center rounded-full bg-accent/50">
               {isPlaying ? <Pause size={20} color="white" /> : <Play size={20} color="white" />}
             </TouchableOpacity>
@@ -66,10 +80,14 @@ const MusicPlayer = () => {
         </View>
       </View>
 
-      <TouchableOpacity onPress={() => like(currentAudio)}>
+      <TouchableOpacity
+        onPress={(e) => {
+          e.stopPropagation(); // Prevent triggering parent's onPress
+          like(currentAudio);
+        }}>
         <Heart size={20} color="white" fill={currentAudio.liked ? 'red' : 'none'} />
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 };
 
