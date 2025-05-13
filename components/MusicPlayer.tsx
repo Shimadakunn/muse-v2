@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { Heart, Pause, Play } from 'lucide-react-native';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+
+import Cover from './ui/cover';
 
 import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { useSwipeStore } from '~/store/useSwipe';
@@ -13,13 +14,7 @@ const MusicPlayer = () => {
 
   if (!currentAudio) return null;
 
-  // Calculate progress percentage
   const progress = duration > 0 ? position / duration : 0;
-  const size = 40; // Size of the circle (matching the TouchableOpacity)
-  const strokeWidth = 2;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference * (1 - progress);
 
   const handleOpenModal = () => {
     router.push({
@@ -30,49 +25,15 @@ const MusicPlayer = () => {
 
   return (
     <TouchableOpacity
-      className="mx-2 flex-row items-center rounded-full border border-foreground/50 bg-card p-3"
+      className="relative mx-2 flex-row items-center overflow-hidden rounded-3xl border border-foreground/50 bg-card p-3"
       onPress={handleOpenModal}
       activeOpacity={0.7}>
-      <View className="flex-1 flex-row items-center">
-        <View className="relative h-10 w-10 items-center justify-center">
-          <Svg width={size} height={size} style={{ position: 'absolute' }}>
-            <Circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              stroke="#444444"
-              strokeWidth={strokeWidth}
-              fill="transparent"
-            />
-            <Circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              stroke="#ffffff"
-              strokeWidth={strokeWidth}
-              fill="transparent"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
-              transform={`rotate(-90, ${size / 2}, ${size / 2})`}
-            />
-          </Svg>
-          {isLoading ? (
-            <ActivityIndicator color="white" size="small" />
-          ) : (
-            <TouchableOpacity
-              onPress={(e) => {
-                e.stopPropagation(); // Prevent triggering parent's onPress
-                isPlaying ? pauseAudio() : resumeAudio();
-              }}
-              className="h-10 w-10 items-center justify-center rounded-full bg-accent/50">
-              {isPlaying ? <Pause size={20} color="white" /> : <Play size={20} color="white" />}
-            </TouchableOpacity>
-          )}
-        </View>
+      {/* COVER & TITLE */}
+      <View className="flex-1 flex-row items-center gap-2">
+        <Cover coverUrl={currentAudio.cover_url} className="h-10 w-10 rounded-xl" />
 
         {/* Title and artist */}
-        <View className="ml-3 flex-1">
+        <View className="flex-1">
           <Text className="truncate font-medium text-white">{currentAudio.title}</Text>
           <Text className="truncate text-xs text-gray-400">
             {currentAudio.posted_by_user?.username || 'Unknown Artist'}
@@ -80,13 +41,40 @@ const MusicPlayer = () => {
         </View>
       </View>
 
+      {/* LIKE */}
       <TouchableOpacity
         onPress={(e) => {
           e.stopPropagation(); // Prevent triggering parent's onPress
           like(currentAudio);
         }}>
-        <Heart size={20} color="white" fill={currentAudio.liked ? 'red' : 'none'} />
+        <Heart size={22} color="white" fill={currentAudio.liked ? 'red' : 'none'} />
       </TouchableOpacity>
+
+      {/* PLAY PAUSE */}
+      {isLoading ? (
+        <ActivityIndicator color="white" size="small" />
+      ) : (
+        <TouchableOpacity
+          onPress={(e) => {
+            e.stopPropagation();
+            isPlaying ? pauseAudio() : resumeAudio();
+          }}
+          className="h-10 w-10 items-center justify-center">
+          {isPlaying ? (
+            <Pause size={24} color="white" fill="white" />
+          ) : (
+            <Play size={24} color="white" fill="white" />
+          )}
+        </TouchableOpacity>
+      )}
+
+      {/* PROGRESS BAR */}
+      <View
+        className="absolute bottom-0 left-0 right-0 mx-2 h-1 flex-row overflow-hidden"
+        style={{ borderBottomLeftRadius: 24, borderBottomRightRadius: 24 }}>
+        <View className="h-full rounded-full bg-white" style={{ width: `${progress * 100}%` }} />
+        <View className="h-full flex-1 bg-foreground/20" />
+      </View>
     </TouchableOpacity>
   );
 };

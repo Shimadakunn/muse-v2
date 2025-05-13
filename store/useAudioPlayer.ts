@@ -17,6 +17,7 @@ interface AudioPlayerState {
   resumeAudio: () => Promise<void>;
   stopAudio: () => Promise<void>;
   seekAudio: (position: number) => Promise<void>;
+  seekToQuarter: (quarterIndex: number) => Promise<void>;
   updatePosition: (position: number) => void;
   updateDuration: (duration: number) => void;
 }
@@ -77,6 +78,13 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => ({
         }
       });
 
+      // Start playing from the first quarter (25% of the track)
+      const status = await sound.getStatusAsync();
+      if (status.isLoaded && status.durationMillis) {
+        const firstQuarterPosition = status.durationMillis * 0.25;
+        await sound.setPositionAsync(firstQuarterPosition);
+      }
+
       set({ sound, isPlaying: true, isLoading: false });
     } catch (error) {
       console.error('Error playing audio:', error);
@@ -119,6 +127,16 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => ({
     if (sound) {
       await sound.setPositionAsync(position);
       set({ position });
+    }
+  },
+
+  seekToQuarter: async (quarterIndex: number) => {
+    const { sound, duration } = get();
+    if (sound && duration > 0) {
+      // Calculate position based on quarter (0-3)
+      const newPosition = (duration * quarterIndex) / 4;
+      await sound.setPositionAsync(newPosition);
+      set({ position: newPosition });
     }
   },
 

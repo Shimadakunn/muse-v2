@@ -85,7 +85,7 @@ export default function TabsLayout() {
           />
         )}
       </Tabs>
-      {currentAudio && !isHomeTab && (
+      {currentAudio && (
         <View style={{ position: 'absolute', bottom: 60, left: 0, right: 0 }}>
           <MusicPlayer />
         </View>

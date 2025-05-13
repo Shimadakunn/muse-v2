@@ -2,20 +2,23 @@ import { useEffect, useRef, useState } from 'react';
 import { Dimensions, FlatList, NativeScrollEvent, NativeSyntheticEvent, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import Actions from '~/components/Actions';
 import AudioCard from '~/components/AudioCard';
+import ProgressBar from '~/components/ProgressBar';
 import { Text } from '~/components/ui/text';
 import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { Audio, useSwipeStore } from '~/store/useSwipe';
 
 export default function Home() {
   const { audios, swipeUp, getAudios } = useSwipeStore();
-  const { playAudio } = useAudioPlayer();
+  const { playAudio, position, duration } = useAudioPlayer();
   const flatListRef = useRef<FlatList<Audio>>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [previousIndex, setPreviousIndex] = useState(0);
   const [isLikeScroll, setIsLikeScroll] = useState(false);
 
-  const ITEM_HEIGHT = Dimensions.get('window').height * 0.75 + 16;
+  // Use full screen width for each item
+  const ITEM_WIDTH = Dimensions.get('window').width;
 
   useEffect(() => {
     if (currentIndex !== previousIndex) {
@@ -37,8 +40,8 @@ export default function Home() {
   }, []);
 
   const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    const newIndex = Math.round(offsetY / ITEM_HEIGHT);
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const newIndex = Math.round(offsetX / ITEM_WIDTH);
 
     if (newIndex !== currentIndex) setCurrentIndex(newIndex);
   };
@@ -55,23 +58,25 @@ export default function Home() {
   }
 
   return (
-    <GestureHandlerRootView className="flex-1 bg-background">
+    <GestureHandlerRootView className="relative flex-1 bg-black">
       <FlatList
         ref={flatListRef}
         data={audios}
         keyExtractor={(item, index) => `audio-${item.id}-${index}`}
-        renderItem={({ item: audio }) => (
-          <View className="m-2">
-            <AudioCard audio={audio} />
-          </View>
-        )}
-        showsVerticalScrollIndicator={false}
-        snapToAlignment="start"
+        renderItem={({ item: audio }) => <AudioCard audio={audio} />}
+        showsHorizontalScrollIndicator={false}
+        horizontal
+        snapToAlignment="center"
         pagingEnabled
-        snapToInterval={ITEM_HEIGHT}
+        snapToInterval={ITEM_WIDTH}
         decelerationRate="fast"
         onMomentumScrollEnd={handleMomentumScrollEnd}
+        className="h-[30vh] border border-red-500"
       />
+      <View className="absolute bottom-[10vh] left-0 right-0 border border-blue-500">
+        <ProgressBar />
+        <Actions />
+      </View>
     </GestureHandlerRootView>
   );
 }
