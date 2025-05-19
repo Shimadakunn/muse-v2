@@ -1,8 +1,8 @@
 import { useFocusEffect } from '@react-navigation/native';
+import { Image } from 'expo-image';
 import { useCallback } from 'react';
 import { FlatList, TouchableOpacity, View } from 'react-native';
 
-import Cover from '~/components/ui/cover';
 import { Text } from '~/components/ui/text';
 import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { useLibraryStore } from '~/store/useLibrary';
@@ -39,7 +39,10 @@ export default function Library() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity className="m-2" onPress={() => playAudio(item)}>
-            <Cover coverUrl={item.cover_url} className="aspect-square w-[125px] rounded-2xl" />
+            <Image
+              source={{ uri: item.cover_url }}
+              className="aspect-square w-[125px] rounded-2xl"
+            />
             <Text className="mt-2 text-center text-sm text-foreground">{item.title}</Text>
           </TouchableOpacity>
         )}

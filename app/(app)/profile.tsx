@@ -1,7 +1,6 @@
+import { Image } from 'expo-image';
 import { View } from 'react-native';
 import { toast } from 'sonner-native';
-
-import Avatar from './avatar';
 
 import { Back } from '~/components/ui';
 import { Button } from '~/components/ui/button';
@@ -31,7 +30,10 @@ export default function Index() {
 
       <Text>{user?.username}</Text>
       <Text>{user?.avatar_url}</Text>
-      <Avatar />
+      <Image
+        source={{ uri: user?.avatar_url }}
+        style={{ width: 100, height: 100, borderRadius: 50 }}
+      />
     </View>
   );
 }

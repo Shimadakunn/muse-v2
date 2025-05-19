@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera } from 'lucide-react-native';
 import { useState } from 'react';
@@ -5,13 +6,11 @@ import { TextInput, TouchableOpacity, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { Back, Button, Text } from '~/components/ui';
-import Avatar from '~/components/ui/avatar';
 import { useAuthStore } from '~/store/useAuth';
 import { useUserStore } from '~/store/useUser';
 
 export default function Profile() {
   const { user, uploadAvatar } = useUserStore();
-  const { signOut } = useAuthStore();
   const { session } = useAuthStore();
   const [username, setUsername] = useState(user?.username);
 
@@ -45,7 +44,10 @@ export default function Profile() {
 
       {/* Avatar */}
       <TouchableOpacity onPress={handleAvatarUpload} className="mx-auto">
-        <Avatar avatarUrl={user?.avatar_url || ''} size={100} />
+        <Image
+          source={{ uri: user?.avatar_url || '' }}
+          style={{ width: 100, height: 100, borderRadius: 50 }}
+        />
         <View className="absolute bottom-0 left-0 right-0 top-0 items-center justify-center rounded-full bg-black/50">
           <Camera size={24} color="white" />
         </View>

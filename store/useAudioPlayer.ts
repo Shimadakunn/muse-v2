@@ -1,150 +1,68 @@
-import { AVPlaybackStatus, Audio as ExpoAudio } from 'expo-av';
+import { AudioPlayer, createAudioPlayer } from 'expo-audio';
 import { create } from 'zustand';
 
 import { Audio as AudioType } from './useSwipe';
 
-import { downloadAudio } from '~/utils/downloadAudio';
-
 interface AudioPlayerState {
   currentAudio: AudioType | null;
-  isPlaying: boolean;
-  sound: ExpoAudio.Sound | null;
-  duration: number;
+  audioPlayer: AudioPlayer | null;
   position: number;
-  isLoading: boolean;
+  duration: number;
+  setAudioPlayer: (audio: AudioType, audio_url: string) => void;
   playAudio: (audio: AudioType) => Promise<void>;
-  pauseAudio: () => Promise<void>;
-  resumeAudio: () => Promise<void>;
-  stopAudio: () => Promise<void>;
-  seekAudio: (position: number) => Promise<void>;
-  seekToQuarter: (quarterIndex: number) => Promise<void>;
-  updatePosition: (position: number) => void;
-  updateDuration: (duration: number) => void;
+  updateProgress: () => void;
 }
 
-export const useAudioPlayer = create<AudioPlayerState>((set, get) => ({
-  currentAudio: null,
-  isPlaying: false,
-  sound: null,
-  duration: 0,
-  position: 0,
-  isLoading: false,
+export const useAudioPlayer = create<AudioPlayerState>((set, get) => {
+  let progressInterval: NodeJS.Timeout | null = null;
 
-  playAudio: async (audio: AudioType) => {
-    const { sound: currentSound, currentAudio } = get();
+  return {
+    currentAudio: null,
+    audioPlayer: null,
+    position: 0,
+    duration: 0,
 
-    if (currentSound && currentAudio?.id !== audio.id) {
-      await currentSound.unloadAsync();
-    } else if (currentAudio?.id === audio.id && currentSound) {
-      await get().resumeAudio();
-      return;
-    }
+    setAudioPlayer: (audio: AudioType, audio_url: string) => {
+      const { audioPlayer } = get();
 
-    set({ isLoading: true, currentAudio: audio });
-
-    try {
-      let audioUri: string | null = null;
-
-      // Download the audio file
-      await new Promise<void>((resolve) => {
-        downloadAudio((uri) => {
-          audioUri = uri;
-          resolve();
-        }, audio.audio_url);
-      });
-
-      if (!audioUri) throw new Error('Failed to download audio');
-
-      // Create and load the Audio object
-      const { sound } = await ExpoAudio.Sound.createAsync(
-        { uri: audioUri },
-        { shouldPlay: true },
-        (status: AVPlaybackStatus) => {
-          if (status.isLoaded) {
-            set({
-              position: status.positionMillis,
-            });
-          }
-        }
-      );
-
-      // Set sound object and update state
-      sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
-        if (status.isLoaded) {
-          set({
-            position: status.positionMillis,
-            duration: status.durationMillis || 0,
-          });
-        }
-      });
-
-      // Start playing from the first quarter (25% of the track)
-      const status = await sound.getStatusAsync();
-      if (status.isLoaded && status.durationMillis) {
-        const firstQuarterPosition = status.durationMillis * 0.25;
-        await sound.setPositionAsync(firstQuarterPosition);
+      if (audioPlayer) {
+        audioPlayer.replace(audio_url);
+      } else {
+        const newPlayer = createAudioPlayer({ uri: audio_url });
+        set({ audioPlayer: newPlayer });
       }
 
-      set({ sound, isPlaying: true, isLoading: false });
-    } catch (error) {
-      console.error('Error playing audio:', error);
-      set({ isLoading: false });
-    }
-  },
+      set({ currentAudio: audio });
 
-  pauseAudio: async () => {
-    const { sound } = get();
-    if (sound) {
-      await sound.pauseAsync();
-      set({ isPlaying: false });
-    }
-  },
+      if (progressInterval) clearInterval(progressInterval);
+      progressInterval = setInterval(() => get().updateProgress(), 500);
+    },
 
-  resumeAudio: async () => {
-    const { sound } = get();
-    if (sound) {
-      await sound.playAsync();
-      set({ isPlaying: true });
-    }
-  },
+    playAudio: async (audio: AudioType) => {
+      const { audioPlayer, currentAudio } = get();
 
-  stopAudio: async () => {
-    const { sound } = get();
-    if (sound) {
-      await sound.stopAsync();
-      await sound.unloadAsync();
-      set({
-        sound: null,
-        isPlaying: false,
-        position: 0,
-        duration: 0,
-      });
-    }
-  },
+      if (audioPlayer && currentAudio && currentAudio.id === audio.id) {
+        if (audioPlayer.playing) audioPlayer.pause();
+        else audioPlayer.play();
+        return;
+      }
 
-  seekAudio: async (position: number) => {
-    const { sound } = get();
-    if (sound) {
-      await sound.setPositionAsync(position);
-      set({ position });
-    }
-  },
+      try {
+        get().setAudioPlayer(audio, audio.audio_url);
+        get().audioPlayer?.play();
+      } catch (error) {
+        console.error('Error playing audio:', error);
+      }
+    },
 
-  seekToQuarter: async (quarterIndex: number) => {
-    const { sound, duration } = get();
-    if (sound && duration > 0) {
-      // Calculate position based on quarter (0-3)
-      const newPosition = (duration * quarterIndex) / 4;
-      await sound.setPositionAsync(newPosition);
-      set({ position: newPosition });
-    }
-  },
-
-  updatePosition: (position: number) => {
-    set({ position });
-  },
-
-  updateDuration: (duration: number) => {
-    set({ duration });
-  },
-}));
+    updateProgress: () => {
+      const { audioPlayer } = get();
+      if (audioPlayer) {
+        set({
+          position: audioPlayer.currentTime,
+          duration: audioPlayer.duration,
+        });
+      }
+    },
+  };
+});

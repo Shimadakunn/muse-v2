@@ -32,7 +32,7 @@ export const useUserStore = create<UserState>()(
           .select(`username, avatar_url, id`)
           .eq('id', session?.user.id)
           .single();
-        if (error && status !== 406) throw error;
+        if ((error && status !== 406) || !data) throw error;
         set({ user: data });
       },
       updateUser: async (session: Session | null, username?: string, avatar_url?: string) => {

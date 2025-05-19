@@ -1,28 +1,26 @@
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Heart, Pause, Play } from 'lucide-react-native';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
-
-import Cover from './ui/cover';
 
 import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { useSwipeStore } from '~/store/useSwipe';
 
 const MusicPlayer = () => {
-  const { currentAudio, isPlaying, isLoading, duration, position, pauseAudio, resumeAudio } =
-    useAudioPlayer();
+  const { currentAudio, audioPlayer, playAudio } = useAudioPlayer();
   const { like } = useSwipeStore();
 
-  if (!currentAudio) return null;
-
-  const progress = duration > 0 ? position / duration : 0;
+  const progress = audioPlayer ? audioPlayer.currentTime / audioPlayer.duration : 0;
 
   const handleOpenModal = () => {
+    if (!currentAudio) return;
     router.push({
       pathname: '/(app)/audio-modal',
       params: { id: currentAudio.id },
     });
   };
 
+  if (!currentAudio) return null;
   return (
     <TouchableOpacity
       className="relative mx-2 flex-row items-center overflow-hidden rounded-3xl border border-foreground/50 bg-card p-3"
@@ -30,7 +28,10 @@ const MusicPlayer = () => {
       activeOpacity={0.7}>
       {/* COVER & TITLE */}
       <View className="flex-1 flex-row items-center gap-2">
-        <Cover coverUrl={currentAudio.cover_url} className="h-10 w-10 rounded-xl" />
+        <Image
+          source={{ uri: currentAudio.cover_url }}
+          style={{ height: 40, width: 40, borderRadius: 10 }}
+        />
 
         {/* Title and artist */}
         <View className="flex-1">
@@ -51,21 +52,21 @@ const MusicPlayer = () => {
       </TouchableOpacity>
 
       {/* PLAY PAUSE */}
-      {isLoading ? (
-        <ActivityIndicator color="white" size="small" />
-      ) : (
+      {audioPlayer ? (
         <TouchableOpacity
           onPress={(e) => {
             e.stopPropagation();
-            isPlaying ? pauseAudio() : resumeAudio();
+            playAudio(currentAudio);
           }}
           className="h-10 w-10 items-center justify-center">
-          {isPlaying ? (
+          {audioPlayer.playing ? (
             <Pause size={24} color="white" fill="white" />
           ) : (
             <Play size={24} color="white" fill="white" />
           )}
         </TouchableOpacity>
+      ) : (
+        <ActivityIndicator color="white" size="small" />
       )}
 
       {/* PROGRESS BAR */}

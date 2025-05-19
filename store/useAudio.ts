@@ -10,14 +10,8 @@ import { supabase } from '~/utils/supabase';
 
 type AudioState = {
   postAudio: (title: string, cover_url: string, audio_url: string) => Promise<void>;
-  uploadCover: (
-    result: ImagePicker.ImagePickerResult,
-    setCoverUrl: (coverUrl: string) => void
-  ) => Promise<void>;
-  uploadAudio: (
-    result: DocumentPicker.DocumentPickerResult,
-    setAudioUrl: (audioUrl: string) => void
-  ) => Promise<void>;
+  uploadCover: (result: ImagePicker.ImagePickerResult) => Promise<string>;
+  uploadAudio: (result: DocumentPicker.DocumentPickerResult) => Promise<string>;
 };
 
 export const useAudioStore = create<AudioState>()(
@@ -38,10 +32,7 @@ export const useAudioStore = create<AudioState>()(
           .single();
         if (error) throw error;
       },
-      uploadCover: async (
-        result: ImagePicker.ImagePickerResult,
-        setCoverUrl: (coverUrl: string) => void
-      ) => {
+      uploadCover: async (result: ImagePicker.ImagePickerResult) => {
         if (result.canceled || !result.assets || result.assets.length === 0)
           throw new Error('No image selected');
         const image = result.assets[0];
@@ -55,12 +46,10 @@ export const useAudioStore = create<AudioState>()(
             contentType: image.mimeType ?? 'image/jpeg',
           });
         if (uploadError) throw uploadError;
-        setCoverUrl(data.path);
+        const { data: cover } = supabase.storage.from('covers').getPublicUrl(data.path);
+        return cover.publicUrl;
       },
-      uploadAudio: async (
-        result: DocumentPicker.DocumentPickerResult,
-        setAudioUrl: (audioUrl: string) => void
-      ) => {
+      uploadAudio: async (result: DocumentPicker.DocumentPickerResult) => {
         if (result.canceled || !result.assets || result.assets.length === 0)
           throw new Error('No audio selected');
         const audio = result.assets[0];
@@ -74,7 +63,8 @@ export const useAudioStore = create<AudioState>()(
             contentType: audio.mimeType ?? 'audio/mpeg',
           });
         if (uploadError) throw uploadError;
-        setAudioUrl(data.path);
+        const { data: audioData } = supabase.storage.from('audios').getPublicUrl(data.path);
+        return audioData.publicUrl;
       },
     }),
     {

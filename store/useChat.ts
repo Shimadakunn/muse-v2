@@ -36,15 +36,12 @@ export const useChatStore = create<ChatState>()(
           .insert({ creator_id, participant_id })
           .select('*')
           .single();
-        console.log('createChat data', data);
-        console.log('createChat error', error);
         if (error) throw error;
         await useChatStore.getState().getChats();
       },
       getChats: async () => {
         const user = useUserStore.getState().user;
         if (!user) throw new Error('No user found in getChats');
-        console.log('getChats user', user?.id);
         const { data, error } = await supabase
           .from('chats')
           .select('*')

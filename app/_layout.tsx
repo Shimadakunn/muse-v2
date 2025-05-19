@@ -24,8 +24,8 @@ export default function Layout() {
           <Stack.Screen name="(app)" />
           <Stack.Screen name="(auth)" />
         </Stack>
+        <Toaster invert />
       </SafeAreaView>
-      <Toaster invert />
     </GestureHandlerRootView>
   );
 }

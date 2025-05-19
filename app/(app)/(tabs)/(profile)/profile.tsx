@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { Edit } from 'lucide-react-native';
@@ -5,7 +6,6 @@ import { Pressable, TouchableOpacity, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { Button, Text } from '~/components/ui';
-import Avatar from '~/components/ui/avatar';
 import { useAuthStore } from '~/store/useAuth';
 import { useUserStore } from '~/store/useUser';
 
@@ -37,7 +37,10 @@ export default function Profile() {
       </Pressable>
       <View className="flex-row items-center gap-4">
         <TouchableOpacity onPress={handleAvatarUpload}>
-          <Avatar avatarUrl={user?.avatar_url || ''} size={100} />
+          <Image
+            source={{ uri: user?.avatar_url || '' }}
+            style={{ width: 100, height: 100, borderRadius: 50 }}
+          />
         </TouchableOpacity>
         <Text>{user?.username}</Text>
         <Text>{user?.id}</Text>

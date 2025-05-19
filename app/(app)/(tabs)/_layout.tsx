@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { Tabs, usePathname } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
@@ -11,7 +12,6 @@ import LibraryIcon from '~/assets/svg/library.svg';
 import PostIconFilled from '~/assets/svg/post-filled.svg';
 import PostIcon from '~/assets/svg/post.svg';
 import MusicPlayer from '~/components/MusicPlayer';
-import Avatar from '~/components/ui/avatar';
 import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { useUserStore } from '~/store/useUser';
 
@@ -76,10 +76,16 @@ export default function TabsLayout() {
               tabBarIcon: ({ focused }) =>
                 focused ? (
                   <View className="rounded-full border-2 border-foreground">
-                    <Avatar avatarUrl={avatarUrl} size={28} />
+                    <Image
+                      source={{ uri: avatarUrl }}
+                      style={{ width: 28, height: 28, borderRadius: 14 }}
+                    />
                   </View>
                 ) : (
-                  <Avatar avatarUrl={avatarUrl} size={28} />
+                  <Image
+                    source={{ uri: avatarUrl }}
+                    style={{ width: 28, height: 28, borderRadius: 14 }}
+                  />
                 ),
             }}
           />

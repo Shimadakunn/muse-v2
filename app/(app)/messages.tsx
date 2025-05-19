@@ -1,10 +1,10 @@
+import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, TextInput, View } from 'react-native';
 
 import SendIcon from '~/assets/svg/send.svg';
 import { Back, Button, Text } from '~/components/ui';
-import Avatar from '~/components/ui/avatar';
 import { useChatStore } from '~/store/useChat';
 import { useMessageStore } from '~/store/useMessage';
 import { useUserStore } from '~/store/useUser';
@@ -94,13 +94,13 @@ export default function Messages() {
       <View className="relative w-full px-2 pb-2">
         <TextInput
           placeholder="Your message..."
-          className="text-foreground bg-card border-foreground/70 placeholder:text-foreground/50 rounded-full border py-3 pl-3"
+          className="rounded-full border border-foreground/70 bg-card py-3 pl-3 text-foreground placeholder:text-foreground/50"
           value={message}
           onChangeText={setMessage}
         />
         {message.length > 0 && (
           <Button
-            className="bg-accent absolute bottom-[4px] right-[5px] rounded-full px-3 py-1"
+            className="absolute bottom-[4px] right-[5px] rounded-full bg-accent px-3 py-1"
             onPress={() => {
               sendMessage(chatId as string, message);
               setMessage('');
@@ -119,8 +119,11 @@ const Header = ({ chatId }: { chatId: string }) => {
   return (
     <View className="w-full flex-row items-center justify-start gap-2">
       <Back />
-      <Avatar avatarUrl={chat?.other_user?.avatar_url || ''} size={32} />
-      <Text className="text-foreground text-lg font-bold">
+      <Image
+        source={{ uri: chat?.other_user?.avatar_url || '' }}
+        style={{ width: 32, height: 32, borderRadius: 16 }}
+      />
+      <Text className="text-lg font-bold text-foreground">
         {chat?.other_user?.username || 'Unknown'}
       </Text>
     </View>

@@ -1,6 +1,6 @@
-import { View } from 'react-native';
+import { Image } from 'expo-image';
+import { Dimensions, View } from 'react-native';
 
-import Cover from './ui/cover';
 import { Text } from './ui/text';
 
 import { Audio as AudioType } from '~/store/useSwipe';
@@ -9,17 +9,30 @@ interface AudioProps {
   audio: AudioType;
 }
 
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.8; // 90% of screen width
+
 export default function AudioCard({ audio }: AudioProps) {
   return (
-    <View className="mx-4 flex aspect-square w-[80vw] overflow-hidden border border-red-500">
-      <View className="mb-2 items-center">
-        <Text className="text-xl font-bold text-white">{audio.title}</Text>
-        <Text className="text-sm text-gray-300">
-          {audio.posted_by_user?.username || 'Unknown Artist'}
-        </Text>
-      </View>
-      <View className="flex flex-1 items-center justify-center">
-        <Cover coverUrl={audio.cover_url} className="aspect-square h-full max-h-full rounded-lg" />
+    <View className="relative" style={{ width: CARD_WIDTH, marginHorizontal: 8 }}>
+      <View className="absolute left-0 right-0 top-16">
+        <View className="items-center p-4">
+          <Text className="text-xl font-bold text-white">{audio.title}</Text>
+          <Text className="text-sm text-gray-300">
+            {audio.posted_by_user?.username || 'Unknown Artist'}
+          </Text>
+        </View>
+        <Image
+          source={{ uri: audio.cover_url }}
+          style={{
+            width: '100%',
+            aspectRatio: 1,
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: 'red',
+          }}
+          contentFit="cover"
+        />
       </View>
     </View>
   );
