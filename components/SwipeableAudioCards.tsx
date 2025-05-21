@@ -7,6 +7,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 
+import Actions from './Actions';
 import AudioCard from './AudioCard';
 import ProgressBar from './ProgressBar';
 
@@ -41,12 +42,6 @@ export default function SwipeableAudioCards({ audios, onSwipeEnd }: SwipeableAud
     },
   });
 
-  const snapToItem = (index: number) => {
-    if (flatListRef.current) {
-      flatListRef.current.scrollToIndex({ index, animated: true });
-    }
-  };
-
   const renderItem = ({ item }: { item: Audio }) => {
     return <AudioCard audio={item} />;
   };
@@ -74,8 +69,9 @@ export default function SwipeableAudioCards({ audios, onSwipeEnd }: SwipeableAud
           index,
         })}
       />
-      <View className="absolute bottom-[25%] left-20 right-20">
+      <View className="absolute bottom-[30%] left-16 right-16">
         <ProgressBar />
+        <Actions audio={audios[currentIndex]} />
       </View>
     </GestureHandlerRootView>
   );

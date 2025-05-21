@@ -8,8 +8,8 @@ interface AudioPlayerState {
   audioPlayer: AudioPlayer | null;
   position: number;
   duration: number;
-  setAudioPlayer: (audio: AudioType, audio_url: string) => void;
-  playAudio: (audio: AudioType) => Promise<void>;
+  setAudioPlayer: (audio: AudioType, audio_url: string) => Promise<void>;
+  playAudio: (audio: AudioType, quarter?: number | null) => Promise<void>;
   updateProgress: () => void;
 }
 
@@ -22,15 +22,11 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => {
     position: 0,
     duration: 0,
 
-    setAudioPlayer: (audio: AudioType, audio_url: string) => {
+    setAudioPlayer: async (audio: AudioType, audio_url: string) => {
       const { audioPlayer } = get();
 
-      if (audioPlayer) {
-        audioPlayer.replace(audio_url);
-      } else {
-        const newPlayer = createAudioPlayer({ uri: audio_url });
-        set({ audioPlayer: newPlayer });
-      }
+      if (audioPlayer) audioPlayer.replace(audio_url);
+      else set({ audioPlayer: createAudioPlayer({ uri: audio_url }) });
 
       set({ currentAudio: audio });
 
@@ -38,17 +34,34 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => {
       progressInterval = setInterval(() => get().updateProgress(), 500);
     },
 
-    playAudio: async (audio: AudioType) => {
+    playAudio: async (audio: AudioType, quarter: number | null = null) => {
       const { audioPlayer, currentAudio } = get();
+      console.log('quarter', quarter);
 
       if (audioPlayer && currentAudio && currentAudio.id === audio.id) {
-        if (audioPlayer.playing) audioPlayer.pause();
-        else audioPlayer.play();
+        if (audioPlayer.playing && !quarter) audioPlayer.pause();
+        else {
+          const duration = audioPlayer.duration;
+          console.log('old audio duration', duration);
+          if (duration) audioPlayer.seekTo((quarter * duration) / 4);
+          audioPlayer.play();
+        }
         return;
       }
 
       try {
-        get().setAudioPlayer(audio, audio.audio_url);
+        await get().setAudioPlayer(audio, audio.audio_url);
+        const waitForDuration = async () => {
+          let tries = 0;
+          while ((!get().audioPlayer?.isLoaded || !get().audioPlayer?.duration) && tries < 20) {
+            await new Promise((res) => setTimeout(res, 100));
+            tries++;
+          }
+        };
+        await waitForDuration();
+
+        const duration = get().audioPlayer?.duration;
+        if (duration) get().audioPlayer?.seekTo((quarter * duration) / 4);
         get().audioPlayer?.play();
       } catch (error) {
         console.error('Error playing audio:', error);

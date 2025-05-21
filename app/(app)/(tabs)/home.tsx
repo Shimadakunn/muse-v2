@@ -7,17 +7,17 @@ import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { useSwipeStore } from '~/store/useSwipe';
 
 export default function Home() {
-  const { audios, getAudios } = useSwipeStore();
+  const { audios, getAudios, swipe } = useSwipeStore();
   const { playAudio } = useAudioPlayer();
 
   useEffect(() => {
     getAudios();
+    if (audios[0]) playAudio(audios[0], 1);
   }, []);
 
   const handleSwipeEnd = (index: number) => {
-    if (audios[index]) {
-      playAudio(audios[index]);
-    }
+    if (audios[index]) playAudio(audios[index], 1);
+    swipe(audios[index - 1]);
   };
 
   if (audios.length === 0) {

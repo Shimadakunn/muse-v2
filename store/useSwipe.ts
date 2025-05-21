@@ -28,7 +28,7 @@ export type SwipedAudio = {
 type SwipeState = {
   audios: Audio[];
   getAudios: () => Promise<void>;
-  swipeUp: (audio: Audio, liked: boolean) => Promise<void>;
+  swipe: (audio: Audio) => Promise<void>;
   like: (audio: Audio) => Promise<void>;
 };
 
@@ -80,11 +80,11 @@ export const useSwipeStore = create<SwipeState>()(
           audios: addMore ? [...state.audios, ...audiosWithUsers] : audiosWithUsers,
         }));
       },
-      swipeUp: async (audio: Audio) => {
+      swipe: async (audio: Audio) => {
         const { user } = useUserStore.getState();
         if (!user) throw new Error('User not found');
 
-        const { error: existingSwipeError } = await supabase
+        const { error: existingSwipeError } = await supabase // check if the user has swiped this audio
           .from('swipes')
           .select('*')
           .eq('swiper_id', user.id)
@@ -102,7 +102,6 @@ export const useSwipeStore = create<SwipeState>()(
             audios: state.audios.map((a) => (a.id === audio.id ? { ...a, liked: false } : a)),
           }));
         }
-
         useLibraryStore.getState().getLibrary();
       },
       like: async (audio: Audio) => {
@@ -123,6 +122,7 @@ export const useSwipeStore = create<SwipeState>()(
             liked: true,
           });
           if (error) throw error;
+
           set((state) => ({
             audios: state.audios.map((a) => (a.id === audio.id ? { ...a, liked: true } : a)),
           }));
@@ -137,20 +137,20 @@ export const useSwipeStore = create<SwipeState>()(
             .from('swipes')
             .update({ liked: !existingSwipe.liked })
             .eq('id', existingSwipe.id);
+
+          if (updateError) throw updateError;
+
           set((state) => ({
             audios: state.audios.map((a) =>
               a.id === audio.id ? { ...a, liked: !existingSwipe.liked } : a
             ),
           }));
-          useLibraryStore
-            .getState()
-            .library.map((a) => (a.id === audio.id ? { ...a, liked: !existingSwipe.liked } : a));
+
           const audioPlayer = useAudioPlayer.getState();
           if (audioPlayer.currentAudio && audioPlayer.currentAudio.id === audio.id)
             useAudioPlayer.setState({
               currentAudio: { ...audioPlayer.currentAudio, liked: !existingSwipe.liked },
             });
-          if (updateError) throw updateError;
         }
         useLibraryStore.getState().getLibrary();
       },
