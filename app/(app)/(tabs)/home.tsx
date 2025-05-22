@@ -8,15 +8,15 @@ import { useSwipeStore } from '~/store/useSwipe';
 
 export default function Home() {
   const { audios, getAudios, swipe } = useSwipeStore();
-  const { playAudio } = useAudioPlayer();
+  const { playQuarter } = useAudioPlayer();
 
   useEffect(() => {
     getAudios();
-    if (audios[0]) playAudio(audios[0], 1);
+    if (audios[0]) playQuarter(audios[0], 'start');
   }, []);
 
   const handleSwipeEnd = (index: number) => {
-    if (audios[index]) playAudio(audios[index], 1);
+    if (audios[index]) playQuarter(audios[index], 'start');
     swipe(audios[index - 1]);
   };
 

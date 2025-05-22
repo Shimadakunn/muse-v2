@@ -14,7 +14,7 @@ const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.8; // 90% of screen width
 
 export default function AudioCard({ audio }: AudioProps) {
-  const { playAudio } = useAudioPlayer();
+  const { playQuarter, playPauseAudio } = useAudioPlayer();
 
   // Helper to handle press
   const handleImagePress = (event: any) => {
@@ -25,13 +25,13 @@ export default function AudioCard({ audio }: AudioProps) {
 
     if (locationX < leftZone) {
       console.log('skipping to 0');
-      playAudio(audio, 0);
+      playQuarter(audio, 'previous');
     } else if (locationX > rightZone) {
       console.log('skipping to 3');
-      playAudio(audio, 3);
+      playQuarter(audio, 'next');
     } else {
       console.log('playing');
-      playAudio(audio);
+      playPauseAudio();
     }
   };
 

@@ -7,7 +7,7 @@ import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { useSwipeStore } from '~/store/useSwipe';
 
 const MusicPlayer = () => {
-  const { currentAudio, audioPlayer, playAudio } = useAudioPlayer();
+  const { currentAudio, audioPlayer, playPauseAudio } = useAudioPlayer();
   const { like } = useSwipeStore();
 
   const progress = audioPlayer ? audioPlayer.currentTime / audioPlayer.duration : 0;
@@ -56,7 +56,7 @@ const MusicPlayer = () => {
         <TouchableOpacity
           onPress={(e) => {
             e.stopPropagation();
-            playAudio(currentAudio);
+            playPauseAudio();
           }}
           className="h-10 w-10 items-center justify-center">
           {audioPlayer.playing ? (
@@ -71,7 +71,7 @@ const MusicPlayer = () => {
 
       {/* PROGRESS BAR */}
       <View
-        className="absolute bottom-0 left-0 right-0 mx-2 h-1 flex-row overflow-hidden"
+        className="absolute bottom-0 left-0 right-0 mx-3 h-1 flex-row overflow-hidden"
         style={{ borderBottomLeftRadius: 24, borderBottomRightRadius: 24 }}>
         <View className="h-full rounded-full bg-white" style={{ width: `${progress * 100}%` }} />
         <View className="h-full flex-1 bg-foreground/20" />
