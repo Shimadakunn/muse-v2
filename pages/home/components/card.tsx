@@ -1,8 +1,9 @@
 import { Image } from 'expo-image';
+import { memo } from 'react';
 import { Dimensions, Pressable, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { Text } from './ui/text';
-
+import { Text } from '~/components/ui/text';
 import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { Audio as AudioType } from '~/store/useSwipe';
 
@@ -15,7 +16,9 @@ interface AudioProps {
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.8;
 
-export default function AudioCard({ audio, onNavigateToNext, onNavigateToPrevious }: AudioProps) {
+const AnimatedImage = Animated.createAnimatedComponent(Image);
+
+function AudioCard({ audio, onNavigateToNext, onNavigateToPrevious }: AudioProps) {
   const { playQuarter, playPauseAudio, position, duration } = useAudioPlayer();
 
   const handleImagePress = (event: any) => {
@@ -36,7 +39,10 @@ export default function AudioCard({ audio, onNavigateToNext, onNavigateToPreviou
   };
 
   return (
-    <View className="relative" style={{ width: CARD_WIDTH, marginHorizontal: 8 }}>
+    <Animated.View
+      className="relative"
+      style={{ width: CARD_WIDTH, marginHorizontal: 8 }}
+      entering={FadeIn.duration(300)}>
       <View className="absolute left-0 right-0 top-16">
         <View className="items-center p-4">
           <Text className="text-xl font-bold text-white">{audio.title}</Text>
@@ -45,7 +51,7 @@ export default function AudioCard({ audio, onNavigateToNext, onNavigateToPreviou
           </Text>
         </View>
         <Pressable onPress={handleImagePress}>
-          <Image
+          <AnimatedImage
             source={{ uri: audio.cover_url }}
             style={{
               width: '100%',
@@ -55,9 +61,14 @@ export default function AudioCard({ audio, onNavigateToNext, onNavigateToPreviou
               borderColor: 'red',
             }}
             contentFit="cover"
+            cachePolicy="memory-disk"
+            transition={300}
+            placeholder={{ uri: audio.cover_url }}
           />
         </Pressable>
       </View>
-    </View>
+    </Animated.View>
   );
 }
+
+export default memo(AudioCard);

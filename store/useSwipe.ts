@@ -75,7 +75,6 @@ export const useSwipeStore = create<SwipeState>()(
             }
           })
         );
-
         set((state) => ({
           audios: addMore ? [...state.audios, ...audiosWithUsers] : audiosWithUsers,
         }));
@@ -84,7 +83,7 @@ export const useSwipeStore = create<SwipeState>()(
         const { user } = useUserStore.getState();
         if (!user) throw new Error('User not found');
 
-        const { error: existingSwipeError } = await supabase // check if the user has swiped this audio
+        const { error: existingSwipeError } = await supabase
           .from('swipes')
           .select('*')
           .eq('swiper_id', user.id)

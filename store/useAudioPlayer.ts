@@ -12,10 +12,12 @@ interface AudioPlayerState {
   playQuarter: (audio: AudioType, direction: 'next' | 'previous' | 'start') => Promise<void>;
   setAudioPlayer: (audio: AudioType) => Promise<void>;
   updateProgress: () => void;
+  preloadAudio: (audioUrl: string) => void;
 }
 
 export const useAudioPlayer = create<AudioPlayerState>((set, get) => {
   let progressInterval: NodeJS.Timeout | null = null;
+  const audioCache: Record<string, boolean> = {};
 
   return {
     currentAudio: null,
@@ -25,36 +27,43 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => {
 
     playPauseAudio: async () => {
       const { audioPlayer } = get();
-      if (audioPlayer!.playing) audioPlayer!.pause();
-      else audioPlayer!.play();
+      if (!audioPlayer) return;
+
+      if (audioPlayer.playing) audioPlayer.pause();
+      else audioPlayer.play();
     },
 
     playQuarter: async (audio: AudioType, direction: 'next' | 'previous' | 'start') => {
-      await get().setAudioPlayer(audio);
+      const isSameAudio = get().currentAudio?.id === audio.id;
+
+      if (!isSameAudio) await get().setAudioPlayer(audio);
+
       const waitForDuration = async () => {
         let tries = 0;
         while ((!get().audioPlayer?.isLoaded || !get().audioPlayer?.duration) && tries < 20) {
-          await new Promise((res) => setTimeout(res, 100));
+          await new Promise((res) => setTimeout(res, 50)); // Reduced timeout for faster response
           tries++;
         }
       };
+
       await waitForDuration();
       const { audioPlayer } = get();
-      const duration = audioPlayer!.duration;
+      if (!audioPlayer) return;
+
+      const duration = audioPlayer.duration;
       if (!duration) return;
 
-      let quarter = 0;
+      let quarter = 1;
       if (direction === 'next') {
-        const currentQuarter = Math.floor((audioPlayer!.currentTime / duration) * 4);
+        const currentQuarter = Math.floor((audioPlayer.currentTime / duration) * 4);
         quarter = Math.min(currentQuarter + 1, 3);
       } else if (direction === 'previous') {
-        const currentQuarter = Math.floor((audioPlayer!.currentTime / duration) * 4);
+        const currentQuarter = Math.floor((audioPlayer.currentTime / duration) * 4);
         quarter = Math.max(currentQuarter - 1, 0);
       }
-      // direction === 'start' will use quarter = 0
 
-      audioPlayer!.seekTo((quarter * duration) / 4);
-      audioPlayer?.play();
+      audioPlayer.seekTo((quarter * duration) / 4);
+      audioPlayer.play();
     },
 
     setAudioPlayer: async (audio: AudioType) => {
@@ -67,7 +76,7 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => {
       set({ currentAudio: audio });
 
       if (progressInterval) clearInterval(progressInterval);
-      progressInterval = setInterval(() => get().updateProgress(), 500);
+      progressInterval = setInterval(() => get().updateProgress(), 250); // Reduced interval for smoother UI
     },
 
     updateProgress: () => {
@@ -77,6 +86,21 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => {
           position: audioPlayer.currentTime,
           duration: audioPlayer.duration,
         });
+      }
+    },
+
+    preloadAudio: (audioUrl: string) => {
+      // Skip if already preloaded
+      if (audioCache[audioUrl]) return;
+
+      try {
+        // Just create the player but don't play it - this will cache the resource
+        createAudioPlayer({ uri: audioUrl });
+
+        // Mark as preloaded
+        audioCache[audioUrl] = true;
+      } catch (error) {
+        console.error('Error preloading audio:', error);
       }
     },
   };

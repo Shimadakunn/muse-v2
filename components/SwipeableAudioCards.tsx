@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Dimensions, View } from 'react-native';
+import { Dimensions } from 'react-native';
 import { FlatList, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
@@ -7,16 +7,9 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 
-import Actions from './Actions';
 import AudioCard from './AudioCard';
-import ProgressBar from './ProgressBar';
 
 import { Audio } from '~/store/useSwipe';
-
-interface SwipeableAudioCardsProps {
-  audios: Audio[];
-  onSwipeEnd?: (index: number) => void;
-}
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.8;
@@ -24,7 +17,13 @@ const SPACING = 8;
 const ITEM_WIDTH = CARD_WIDTH + SPACING * 2;
 const EMPTY_SPACE_WIDTH = (width - CARD_WIDTH) / 2;
 
-export default function SwipeableAudioCards({ audios, onSwipeEnd }: SwipeableAudioCardsProps) {
+export default function SwipeableAudioCards({
+  audios,
+  onSwipeEnd,
+}: {
+  audios: Audio[];
+  onSwipeEnd: (index: number) => void;
+}) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useSharedValue(0);
@@ -42,8 +41,32 @@ export default function SwipeableAudioCards({ audios, onSwipeEnd }: SwipeableAud
     },
   });
 
+  const navigateToNext = () => {
+    if (currentIndex < audios.length - 1) {
+      const nextIndex = currentIndex + 1;
+      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+      setCurrentIndex(nextIndex);
+      if (onSwipeEnd) onSwipeEnd(nextIndex);
+    }
+  };
+
+  const navigateToPrevious = () => {
+    if (currentIndex > 0) {
+      const prevIndex = currentIndex - 1;
+      flatListRef.current?.scrollToIndex({ index: prevIndex, animated: true });
+      setCurrentIndex(prevIndex);
+      if (onSwipeEnd) onSwipeEnd(prevIndex);
+    }
+  };
+
   const renderItem = ({ item }: { item: Audio }) => {
-    return <AudioCard audio={item} />;
+    return (
+      <AudioCard
+        audio={item}
+        onNavigateToNext={navigateToNext}
+        onNavigateToPrevious={navigateToPrevious}
+      />
+    );
   };
 
   return (
@@ -69,10 +92,6 @@ export default function SwipeableAudioCards({ audios, onSwipeEnd }: SwipeableAud
           index,
         })}
       />
-      <View className="absolute bottom-[30%] left-16 right-16">
-        <ProgressBar />
-        <Actions audio={audios[currentIndex]} />
-      </View>
     </GestureHandlerRootView>
   );
 }

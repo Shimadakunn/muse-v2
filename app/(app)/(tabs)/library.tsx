@@ -4,14 +4,11 @@ import { useCallback } from 'react';
 import { FlatList, TouchableOpacity, View } from 'react-native';
 
 import { Text } from '~/components/ui/text';
-import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { useLibraryStore } from '~/store/useLibrary';
 
 export default function Library() {
   const { library, getLibrary } = useLibraryStore();
-  const { playAudio } = useAudioPlayer();
 
-  // Load library when the screen comes into focus
   useFocusEffect(
     useCallback(() => {
       getLibrary();
@@ -38,7 +35,7 @@ export default function Library() {
         numColumns={2}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TouchableOpacity className="m-2" onPress={() => playAudio(item)}>
+          <TouchableOpacity className="m-2">
             <Image
               source={{ uri: item.cover_url }}
               className="aspect-square w-[125px] rounded-2xl"
