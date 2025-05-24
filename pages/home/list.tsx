@@ -10,17 +10,16 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import Actions from './actions';
 import AudioCard from './components/card';
+import ProgressBar from './components/quarter-progress-bar';
 
-import { Text } from '~/components/ui/text';
 import { Audio } from '~/store/useSwipe';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.8;
+const CARD_WIDTH = width * 0.85;
 const SPACING = 8;
 const ITEM_WIDTH = CARD_WIDTH + SPACING * 2;
-const EMPTY_SPACE_WIDTH = (width - CARD_WIDTH) / 2;
+const EMPTY_SPACE_WIDTH = (width - CARD_WIDTH) / 2 - 8;
 const VISIBLE_ITEMS = 3; // Number of items to keep rendered at once for performance
 
 type ItemProps = {
@@ -33,11 +32,6 @@ type ItemProps = {
 
 // Separate component to properly use animation hooks
 function AnimatedCard({ item, index, scrollX, onNavigateNext, onNavigatePrevious }: ItemProps) {
-  const scale = useDerivedValue(() => {
-    const distance = Math.abs((scrollX.value - index * ITEM_WIDTH) / ITEM_WIDTH);
-    return withTiming(distance > 0.5 ? 0.9 : 1, { duration: 200 });
-  });
-
   const opacity = useDerivedValue(() => {
     const distance = Math.abs((scrollX.value - index * ITEM_WIDTH) / ITEM_WIDTH);
     return withTiming(distance > 1 ? 0.7 : 1, { duration: 200 });
@@ -45,7 +39,6 @@ function AnimatedCard({ item, index, scrollX, onNavigateNext, onNavigatePrevious
 
   const cardStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: scale.value }],
       opacity: opacity.value,
     };
   });
@@ -68,7 +61,7 @@ export default function SwipeableAudioCards({
   audios: Audio[];
   onSwipeEnd: (index: number) => void;
 }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(2);
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useSharedValue(0);
   const isScrolling = useSharedValue(false);
@@ -165,10 +158,18 @@ export default function SwipeableAudioCards({
           autoscrollToTopThreshold: 10,
         }}
       />
-      <View className="absolute bottom-[100%] left-0 right-0 h-1/2">
-        <Text>{audios[currentIndex].title}</Text>
+      <View
+        className="absolute"
+        style={{
+          zIndex: 10,
+          top: '60%',
+          width: CARD_WIDTH,
+          alignSelf: 'center',
+          paddingTop: 16,
+          paddingHorizontal: 24,
+        }}>
+        <ProgressBar />
       </View>
-      <Actions audios={audios} currentIndex={currentIndex} />
     </GestureHandlerRootView>
   );
 }

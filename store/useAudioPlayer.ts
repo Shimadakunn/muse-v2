@@ -8,6 +8,9 @@ interface AudioPlayerState {
   audioPlayer: AudioPlayer | null;
   position: number;
   duration: number;
+  isTransitioning: boolean;
+  lastPosition: number;
+  lastDuration: number;
   playPauseAudio: () => Promise<void>;
   playQuarter: (audio: AudioType, direction: 'next' | 'previous' | 'start') => Promise<void>;
   setAudioPlayer: (audio: AudioType) => Promise<void>;
@@ -24,6 +27,9 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => {
     audioPlayer: null,
     position: 0,
     duration: 0,
+    isTransitioning: false,
+    lastPosition: 0,
+    lastDuration: 0,
 
     playPauseAudio: async () => {
       const { audioPlayer } = get();
@@ -36,7 +42,17 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => {
     playQuarter: async (audio: AudioType, direction: 'next' | 'previous' | 'start') => {
       const isSameAudio = get().currentAudio?.id === audio.id;
 
-      if (!isSameAudio) await get().setAudioPlayer(audio);
+      // Set transitioning state if switching to a new audio
+      if (!isSameAudio) {
+        // Save current position and duration before transitioning
+        const { position, duration } = get();
+        set({
+          isTransitioning: true,
+          lastPosition: position,
+          lastDuration: duration,
+        });
+        await get().setAudioPlayer(audio);
+      }
 
       const waitForDuration = async () => {
         let tries = 0;
@@ -64,11 +80,19 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => {
 
       audioPlayer.seekTo((quarter * duration) / 4);
       audioPlayer.play();
+
+      // Reset transitioning state after a short delay
+      setTimeout(() => {
+        set({ isTransitioning: false });
+      }, 300);
     },
 
     setAudioPlayer: async (audio: AudioType) => {
       const { audioPlayer, currentAudio } = get();
       if (currentAudio && currentAudio.id === audio.id) return;
+
+      // Keep the previous playing state when transitioning
+      const wasPlaying = audioPlayer?.playing || false;
 
       if (audioPlayer) audioPlayer.replace(audio.audio_url);
       else set({ audioPlayer: createAudioPlayer({ uri: audio.audio_url }) });
@@ -77,15 +101,33 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => {
 
       if (progressInterval) clearInterval(progressInterval);
       progressInterval = setInterval(() => get().updateProgress(), 250); // Reduced interval for smoother UI
+
+      // Maintain play state when transitioning
+      const newPlayer = get().audioPlayer;
+      if (newPlayer && wasPlaying) {
+        newPlayer.play();
+      }
     },
 
     updateProgress: () => {
-      const { audioPlayer } = get();
+      const { audioPlayer, isTransitioning, lastPosition, lastDuration } = get();
+
       if (audioPlayer) {
-        set({
-          position: audioPlayer.currentTime,
-          duration: audioPlayer.duration,
-        });
+        if (isTransitioning) {
+          // During transition, keep using the last position/duration
+          set({
+            position: lastPosition,
+            duration: lastDuration || 1, // Avoid division by zero
+          });
+        } else {
+          // Normal update when not transitioning
+          set({
+            position: audioPlayer.currentTime,
+            duration: audioPlayer.duration,
+            lastPosition: audioPlayer.currentTime,
+            lastDuration: audioPlayer.duration,
+          });
+        }
       }
     },
 

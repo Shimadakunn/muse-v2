@@ -14,7 +14,7 @@ interface AudioProps {
 }
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.8;
+const CARD_WIDTH = width * 0.85;
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -40,32 +40,33 @@ function AudioCard({ audio, onNavigateToNext, onNavigateToPrevious }: AudioProps
 
   return (
     <Animated.View
-      className="relative"
-      style={{ width: CARD_WIDTH, marginHorizontal: 8 }}
+      className="flex-1 items-center justify-center"
+      style={{
+        width: CARD_WIDTH,
+        marginHorizontal: 8,
+      }}
       entering={FadeIn.duration(300)}>
-      <View className="absolute left-0 right-0 top-16">
-        <View className="items-center p-4">
-          <Text className="text-xl font-bold text-white">{audio.title}</Text>
-          <Text className="text-sm text-gray-300">
-            {audio.posted_by_user?.username || 'Unknown Artist'}
-          </Text>
-        </View>
-        <Pressable onPress={handleImagePress}>
-          <AnimatedImage
-            source={{ uri: audio.cover_url }}
-            style={{
-              width: '100%',
-              aspectRatio: 1,
-              borderRadius: 10,
-              borderWidth: 1,
-              borderColor: 'red',
-            }}
-            contentFit="cover"
-            cachePolicy="memory-disk"
-            transition={300}
-            placeholder={{ uri: audio.cover_url }}
-          />
-        </Pressable>
+      <Pressable
+        onPress={handleImagePress}
+        style={{ position: 'absolute', top: '60%', transform: [{ translateY: '-100%' }] }}>
+        <AnimatedImage
+          source={{ uri: audio.cover_url }}
+          style={{
+            width: '100%',
+            aspectRatio: 1,
+            borderRadius: 10,
+          }}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={300}
+          placeholder={{ uri: audio.cover_url }}
+        />
+      </Pressable>
+      <View className="mt-4 items-center" style={{ position: 'absolute', top: '70%' }}>
+        <Text className="text-xl font-bold text-white">{audio.title}</Text>
+        <Text className="text-sm text-gray-300">
+          {audio.posted_by_user?.username || 'Unknown Artist'}
+        </Text>
       </View>
     </Animated.View>
   );

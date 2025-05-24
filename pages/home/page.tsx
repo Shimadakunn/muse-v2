@@ -1,4 +1,5 @@
-import { useCallback, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useEffect, useRef } from 'react';
 import { Image as RNImage, View } from 'react-native';
 
 import SwipeableAudioCards from './list';
@@ -10,6 +11,7 @@ import { useSwipeStore } from '~/store/useSwipe';
 export default function Home() {
   const { audios, getAudios, swipe } = useSwipeStore();
   const { playQuarter, audioPlayer, preloadAudio } = useAudioPlayer();
+  const isTabFocused = useRef(false);
 
   useEffect(() => {
     const fetchAudios = async () => {
@@ -18,17 +20,32 @@ export default function Home() {
     fetchAudios();
   }, [getAudios]);
 
+  useFocusEffect(
+    useCallback(() => {
+      isTabFocused.current = true;
+
+      return () => {
+        isTabFocused.current = false;
+      };
+    }, [])
+  );
+
   useEffect(() => {
-    if (audioPlayer?.playing) audioPlayer.pause();
-    if (audios[0]) playQuarter(audios[0], 'start');
+    if (audios.length > 0 && !audioPlayer) {
+      // Only start playing when no audio is currently playing
+      playQuarter(audios[2], 'start');
+    }
   }, [audios, audioPlayer, playQuarter]);
 
   const handleSwipeEnd = useCallback(
     (index: number) => {
-      if (index < 0 || index >= audios.length) return;
-      if (audios[index]) playQuarter(audios[index], 'start');
+      if (!isTabFocused.current) return;
 
-      // if (audios[index - 1]) swipe(audios[index - 1]);
+      if (index < 0 || index >= audios.length) return;
+
+      // Play the current audio at the same position
+      if (audios[index]) playQuarter(audios[index], 'start');
+      swipe(audios[index - 1]);
 
       // Preload next audio if available
       if (index < audios.length - 1) {
@@ -38,8 +55,17 @@ export default function Home() {
           RNImage.prefetch(nextAudio.cover_url);
         }
       }
+
+      // Also preload previous audio if available for smoother back navigation
+      if (index > 0) {
+        const prevAudio = audios[index - 1];
+        if (prevAudio?.audio_url) {
+          preloadAudio(prevAudio.audio_url);
+          RNImage.prefetch(prevAudio.cover_url);
+        }
+      }
     },
-    [audios, playQuarter, swipe, preloadAudio]
+    [audios, playQuarter, preloadAudio]
   );
 
   if (audios.length === 0) {
