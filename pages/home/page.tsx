@@ -45,7 +45,7 @@ export default function Home() {
 
       // Play the current audio at the same position
       if (audios[index]) playQuarter(audios[index], 'start');
-      swipe(audios[index - 1]);
+      // swipe(audios[index - 1]);
 
       // Preload next audio if available
       if (index < audios.length - 1) {

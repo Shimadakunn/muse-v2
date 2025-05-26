@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Heart, Pause, Play } from 'lucide-react-native';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import { useAudioPlayer } from '~/store/useAudioPlayer';
@@ -57,17 +57,17 @@ const MusicPlayer = () => {
       </View>
 
       {/* LIKE */}
-      <TouchableOpacity
+      <Pressable
         onPress={(e) => {
           e.stopPropagation(); // Prevent triggering parent's onPress
           like(currentAudio);
         }}>
         <Heart size={22} color="white" fill={currentAudio.liked ? 'red' : 'none'} />
-      </TouchableOpacity>
+      </Pressable>
 
       {/* PLAY PAUSE */}
       {audioPlayer ? (
-        <TouchableOpacity
+        <Pressable
           onPress={(e) => {
             e.stopPropagation();
             playPauseAudio();
@@ -78,7 +78,7 @@ const MusicPlayer = () => {
           ) : (
             <Play size={24} color="white" fill="white" />
           )}
-        </TouchableOpacity>
+        </Pressable>
       ) : (
         <ActivityIndicator color="white" size="small" />
       )}
