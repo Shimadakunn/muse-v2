@@ -32,13 +32,18 @@ export default function Library() {
 
       <FlatList
         data={library}
-        numColumns={2}
+        numColumns={3}
+        columnWrapperStyle={{ gap: 2, justifyContent: 'space-between' }}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity className="m-2">
             <Image
               source={{ uri: item.cover_url }}
-              className="aspect-square w-[125px] rounded-2xl"
+              style={{ width: 100, height: 100, borderRadius: 10 }}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              transition={300}
+              placeholder={{ uri: item.cover_url }}
             />
             <Text className="mt-2 text-center text-sm text-foreground">{item.title}</Text>
           </TouchableOpacity>
