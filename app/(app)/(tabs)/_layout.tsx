@@ -11,13 +11,14 @@ import LibraryFilled from '~/assets/svg/library-filled.svg';
 import LibraryIcon from '~/assets/svg/library.svg';
 import PostIconFilled from '~/assets/svg/post-filled.svg';
 import PostIcon from '~/assets/svg/post.svg';
+import AudioModal from '~/components/AudioModal';
 import MusicPlayer from '~/components/MusicPlayer';
 import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { useUserStore } from '~/store/useUser';
 
 export default function TabsLayout() {
   const { user } = useUserStore();
-  const { currentAudio } = useAudioPlayer();
+  const { currentAudio, isVisible, setIsVisible } = useAudioPlayer();
   const [avatarUrl, setAvatarUrl] = useState<string>(user?.avatar_url ?? '');
   const pathname = usePathname();
   const isHomeTab = pathname === '/home' || pathname === '/';
@@ -92,9 +93,12 @@ export default function TabsLayout() {
         )}
       </Tabs>
       {currentAudio && (
-        <View style={{ position: 'absolute', bottom: 60, left: 0, right: 0 }}>
-          <MusicPlayer />
-        </View>
+        <>
+          <View style={{ position: 'absolute', bottom: 60, left: 0, right: 0 }}>
+            <MusicPlayer />
+          </View>
+          <AudioModal isVisible={isVisible} setIsVisible={setIsVisible} />
+        </>
       )}
     </View>
   );

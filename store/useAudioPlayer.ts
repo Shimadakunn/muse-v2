@@ -16,6 +16,10 @@ interface AudioPlayerState {
   setAudioPlayer: (audio: AudioType) => Promise<void>;
   updateProgress: () => void;
   preloadAudio: (audioUrl: string) => void;
+
+  // AudioModal
+  isVisible: boolean;
+  setIsVisible: (isVisible: boolean) => void;
 }
 
 export const useAudioPlayer = create<AudioPlayerState>((set, get) => {
@@ -30,6 +34,8 @@ export const useAudioPlayer = create<AudioPlayerState>((set, get) => {
     isTransitioning: false,
     lastPosition: 0,
     lastDuration: 0,
+    isVisible: false,
+    setIsVisible: (isVisible: boolean) => set({ isVisible }),
 
     playPauseAudio: async () => {
       const { audioPlayer } = get();

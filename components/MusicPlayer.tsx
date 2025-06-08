@@ -1,26 +1,29 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Heart, Pause, Play } from 'lucide-react-native';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+
+import AudioModal from './AudioModal';
 
 import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { useSwipeStore } from '~/store/useSwipe';
 
 const MusicPlayer = () => {
-  const { currentAudio, audioPlayer, playPauseAudio, isTransitioning, position, duration } =
-    useAudioPlayer();
+  const {
+    currentAudio,
+    audioPlayer,
+    playPauseAudio,
+    isTransitioning,
+    position,
+    duration,
+    isVisible,
+    setIsVisible,
+  } = useAudioPlayer();
   const { like } = useSwipeStore();
 
   const progress = duration > 0 ? position / duration : 0;
-
-  const handleOpenModal = () => {
-    if (!currentAudio) return;
-    router.push({
-      pathname: '/(app)/audio-modal',
-      params: { id: currentAudio.id },
-    });
-  };
 
   // Animate the progress bar to prevent resets during transitions
   const progressStyle = useAnimatedStyle(() => {
@@ -32,8 +35,8 @@ const MusicPlayer = () => {
   if (!currentAudio) return null;
   return (
     <TouchableOpacity
-      className="relative mx-2 flex-row items-center overflow-hidden rounded-3xl border border-foreground/50 bg-card p-3"
-      onPress={handleOpenModal}
+      className=" mx-2 flex-row items-center overflow-hidden rounded-3xl border border-foreground/50 bg-card p-3"
+      onPress={() => setIsVisible(!isVisible)}
       activeOpacity={0.7}>
       {/* COVER & TITLE */}
       <View className="flex-1 flex-row items-center gap-2">
