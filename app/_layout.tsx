@@ -14,7 +14,7 @@ export default function Layout() {
   if (!isReady) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#121212' }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#000' }}>
       <SafeAreaView style={{ flex: 1 }}>
         <Stack
           screenOptions={{

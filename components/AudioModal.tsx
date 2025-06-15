@@ -1,13 +1,12 @@
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
-import { Heart, Pause, Play, ArrowLeft } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
-import { Dimensions, Text, View, TouchableOpacity, StyleSheet } from 'react-native';
+import { ArrowLeft, Heart, Pause, Play } from 'lucide-react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import Drawer from '~/components/ui/drawer';
 import { useAudioPlayer } from '~/store/useAudioPlayer';
 import { useSwipeStore } from '~/store/useSwipe';
+import { formatAudioTime } from '~/utils/formatAudioTime';
 
 export default function AudioModal({
   isVisible,
@@ -70,8 +69,8 @@ export default function AudioModal({
 
         {/* Time indicators */}
         <View className="mb-8 flex-row justify-between">
-          <Text className="text-gray-400">{formatTime(position)}</Text>
-          <Text className="text-gray-400">{formatTime(duration)}</Text>
+          <Text className="text-gray-400">{formatAudioTime(position)}</Text>
+          <Text className="text-gray-400">{formatAudioTime(duration)}</Text>
         </View>
 
         {/* Controls */}
@@ -97,11 +96,4 @@ export default function AudioModal({
       </View>
     </Drawer>
   );
-}
-
-// Helper function to format time
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }

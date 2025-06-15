@@ -15,7 +15,7 @@ export default function ProtectedLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#121212' },
+        contentStyle: { backgroundColor: '#000' },
       }}>
       <Stack.Screen name="profile" />
       <Stack.Screen name="edit" options={{ presentation: 'modal' }} />

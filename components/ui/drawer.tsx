@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#DEDEDE',
     borderRadius: 2,
     alignSelf: 'center',
-    top: -12,
+    top: 12,
     left: '50%',
     zIndex: 1,
   },
